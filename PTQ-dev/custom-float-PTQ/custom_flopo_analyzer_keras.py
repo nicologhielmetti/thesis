@@ -1,4 +1,5 @@
 import copy
+import json
 import os
 import queue
 import threading
@@ -16,22 +17,24 @@ from matplotlib import rc
 
 
 class CustomFloPoAnalyzerKeras:
-    def __init__(self, model, ulp_path, exp_path, get_data_func, string_id):
+    def __init__(self, model, file_name_id, get_data_func, string_id):
         self.model = model
-        self.ulp_path = ulp_path
-        self.exp_path = exp_path
+        self.file_name_id = file_name_id
         self.ulp_data = []
         self.exp_data = []
         self.string_id = string_id
         self.analysis_data = {}
-        if not os.path.isfile(self.ulp_path) or not os.path.isfile(self.exp_path):
+        ulp_file_path = 'profiling-data/ULP' + '-' + self.string_id + '-' + file_name_id + '.pkl'
+        exp_file_path = 'profiling-data/EXP' + '-' + self.string_id + '-' + file_name_id + '.pkl'
+        if not os.path.isfile(ulp_file_path) or not os.path.isfile(exp_file_path):
             united_data = get_data_func()
             data_gb = united_data.groupby('layer_name')
             self.splitted_data = [data_gb.get_group(x) for x in data_gb.groups]
 
-    def _analysis(self, path, data, compute_function, profile_timing, computation_id):
-        if path is not None and os.path.isfile(path):
-            with open(path, 'rb') as f:
+    def _analysis(self, data, compute_function, profile_timing, computation_id):
+        file_path = 'profiling-data/' + computation_id + '_' + self.string_id + '_' + self.file_name_id + '.pkl'
+        if self.file_name_id is not None and os.path.isfile(file_path):
+            with open(file_path, 'rb') as f:
                 data.extend(pickle.load(f))
                 return data
         threads = []
@@ -58,22 +61,22 @@ class CustomFloPoAnalyzerKeras:
             print(computation_id + ' finished. Elapsed time: ' + str(ts1 - ts) + ' s')
 
         data.extend(list(_queue.queue))
-        if path is not None:
-            with open(path, 'wb') as f:
+        if self.file_name_id is not None:
+            if not os.path.exists('profiling-data'):
+                os.makedirs('profiling-data')
+            with open(file_path, 'wb') as f:
                 pickle.dump(data, f)
         return data
 
     def analyze(self, analyze_ulp=True, analyze_exp=True, profile_timing=False):
 
         ulp_analysis = partial(self._analysis,
-                               path=self.ulp_path,
                                data=self.ulp_data,
                                compute_function=ulp.compute_nogil,
                                profile_timing=profile_timing,
                                computation_id='ULP')
 
         exp_analysis = partial(self._analysis,
-                               path=self.exp_path,
                                data=self.exp_data,
                                compute_function=exp.compute_nogil,
                                profile_timing=profile_timing,
@@ -96,6 +99,10 @@ class CustomFloPoAnalyzerKeras:
         analysis_data = copy.deepcopy(self.analysis_data)
         for d in analysis_data['layer_data']:
             d.pop('plot_data')
+        if not os.path.exists('analysis-report'):
+            os.makedirs('analysis-report')
+        with open('analysis-report/' + self.string_id + '_' + self.file_name_id + '_PTQ_analysis.json', 'w') as fp:
+            json.dump(analysis_data, fp, sort_keys=True, indent=4)
         return analysis_data
 
     def _generate_df_mantissa_exponent_analysis(self, min_value_filter_ulp, min_value_filter_exp, ulp_percentiles):
@@ -195,7 +202,9 @@ class CustomFloPoAnalyzerKeras:
                     round(d['plot_data']['ulps_count_filtered']['count'].max() + d['plot_data']['ulps_count_filtered'][
                         'count'].max() * 0.1)
                 )
-                plt.savefig('plots-test/' + self.string_id + '_' + d['layer_name'] + '_ulp.png', dpi=500)
+                if not os.path.exists(self.model.name + '-plots/'):
+                    os.makedirs(self.model.name + '-plots/')
+                plt.savefig(self.model.name + '-plots/' + self.string_id + '_' + d['layer_name'] + '_ulp.png', dpi=500)
                 plt.close(fig)
             if plot_cumulative:
                 fig, ax = plt.subplots(figsize=(16, 9))
@@ -223,7 +232,9 @@ class CustomFloPoAnalyzerKeras:
 
                 # Add a legend to the plot
                 ax.legend()
-                plt.savefig('plots-test/' + self.string_id + '_' + d['layer_name'] + '_ulp_cdf.png', dpi=500)
+                if not os.path.exists(self.model.name + '-plots/'):
+                    os.makedirs(self.model.name + '-plots/')
+                plt.savefig(self.model.name + '-plots/' + self.string_id + '_' + d['layer_name'] + '_ulp_cdf.png', dpi=500)
                 plt.close(fig)
 
     def _exp_plot(self):
@@ -234,7 +245,9 @@ class CustomFloPoAnalyzerKeras:
             p.set_title('Distribution of Exponent values of ' + self.string_id + ' for layer ' + d['layer_name'])
             p.set_xlabel('Exponent value [pure number]')
             p.set_ylabel('Number of occurrences [pure number]')
-            plt.savefig('plots-test/' + self.string_id + '_' + d['layer_name'] + '_exp.png', dpi=500)
+            if not os.path.exists(self.model.name + '-plots/'):
+                os.makedirs(self.model.name + '-plots/')
+            plt.savefig(self.model.name + '-plots/' + self.string_id + '_' + d['layer_name'] + '_exp.png', dpi=500)
             plt.close(fig)
 
     def make_plots(self, ulp=True, exp=True, cumulative=True, ulp_percentiles=None, colors=None,

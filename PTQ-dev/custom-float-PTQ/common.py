@@ -1,5 +1,7 @@
 from hls4ml.model import profiling
 import numpy as np
+
+
 class Common:
     @staticmethod
     def get_activations_keras(model, X, datatype=np.float32):
@@ -8,4 +10,3 @@ class Common:
     @staticmethod
     def get_weights_keras(model):
         return profiling.weights_keras(model)
-
