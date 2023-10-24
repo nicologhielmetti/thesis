@@ -16,8 +16,8 @@ from models_and_data.models import Models
 
 model = keras.models.load_model('../../models/saved-quickdraw-model/Quickdraw5ClassLSTMFinL.h5')
 model._name = 'quickdraw_original'
-X_test = np.load('../../data/quickdraw-dataset/X_test_format.npy')
-y_test = np.load('../../data/quickdraw-dataset/y_test_format.npy')
+X_test = np.load('../data/quickdraw-dataset/X_test_format.npy')
+y_test = np.load('../data/quickdraw-dataset/y_test_format.npy')
 
 ds_len = 1000
 activations_file_name = model.name + '-' + str(ds_len)
