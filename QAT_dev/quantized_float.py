@@ -6,7 +6,7 @@ from qkeras import BaseQuantizer
 import tensorflow.keras.backend as K
 import tensorflow as tf
 from itertools import chain
-import fpquantizer
+import pyb11_fpquantizer.fpquantizer
 
 
 class quantized_float(BaseQuantizer):

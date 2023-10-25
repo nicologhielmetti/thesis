@@ -1,9 +1,11 @@
 import numpy as np
+from tensorflow import keras
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import categorical_crossentropy
 from sklearn.model_selection import train_test_split
 
 from models_and_data import ModelsAndData
+
 
 # Generate random data (replace this with your actual dataset)
 X = np.random.rand(1000, 10)  # Example: 1000 samples, 1 feature

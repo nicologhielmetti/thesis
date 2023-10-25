@@ -23,16 +23,43 @@ struct Quantizer<CPUDevice, T>
 
 		const view_type qm_mask = (1ULL << (e_width + m_width)) | (((1ULL << m_width) - 1) & ~((1ULL << (m_width - mask->m_bits)) - 1));
 		const view_type e_mask = (1ULL << e_width) - 1;
-		const view_type qe_max = e_bias + (1ULL << (mask->e_bits - 1));
-		const view_type qe_min = e_bias - (1ULL << (mask->e_bits - 1)) + 1;
+		view_type qe_max;
+		view_type qe_min;
+		if(mask->use_est_bias)
+		{
+		    qe_max = e_bias + (1ULL << (mask->e_bits - 1)) + mask->est_bias;
+		    qe_min = e_bias - (1ULL << (mask->e_bits - 1)) + 1 + mask->est_bias;
+		}
+		else
+		{
+		    qe_max = e_bias + (1ULL << (mask->e_bits - 1));
+		    qe_min = e_bias - (1ULL << (mask->e_bits - 1)) + 1;
+		}
 
 		for (int64_t i = 0; i < size; ++i)
 		{
 			view_type qm = *((view_type *)&in[i]) & qm_mask;
 			view_type e = *((view_type *)&in[i]) >> m_width & e_mask;
-			view_type qe = e == 0 ? 0 : (e <= qe_min ? qe_min : (e >= qe_max ? qe_max : e));
-			view_type qout = qm | (qe << m_width);
-			out[i] = *((T *)&qout);
+			if(mask->ret_inf_on_ovf)
+			{
+			    //view_type qe = e == 0 ? 0 : (e <= qe_min ? qe_min : (e >= qe_max ? qe_max : e));
+			    if(e <= qe_min)
+			        out[i] = std::numeric_limits<float>::infinity();
+			    else if(e >= qe_max)
+			        out[i] = -std::numeric_limits<float>::infinity();
+			    else
+			    {
+			        view_type qe = e;
+			        view_type qout = qm | (qe << m_width);
+			        out[i] = *((T *)&qout);
+			    }	    
+			}    
+			else
+			{
+			    view_type qe = e == 0 ? 0 : (e <= qe_min ? qe_min : (e >= qe_max ? qe_max : e));
+                view_type qout = qm | (qe << m_width);
+                out[i] = *((T *)&qout);
+			}
 		}
 	}
 };
@@ -58,6 +85,28 @@ public:
 		OP_REQUIRES(context, _mask.e_bits > 0,
 					errors::InvalidArgument("Need e_bits > 0, got ",
 											_mask.e_bits));
+		OP_REQUIRES_OK(context,
+					   context->GetAttr("est_bias", &_mask.est_bias));
+		
+		// Check that est_bias is in the fp32 exp range
+		OP_REQUIRES(context, _mask.est_bias > -127 && _mask.est_bias < 128,
+					errors::InvalidArgument("Need est_bias > -127 and < 128, got ",
+											_mask.e_bits));
+		OP_REQUIRES_OK(context,
+					   context->GetAttr("use_est_bias", &_mask.use_est_bias));
+		
+		// Check that use_est_bias is 0 or 1
+		OP_REQUIRES(context, _mask.use_est_bias >= 0 && _mask.use_est_bias <= 1,
+					errors::InvalidArgument("Need use_est_bias in {0,1}, got ",
+											_mask.use_est_bias));
+					   
+	    OP_REQUIRES_OK(context,
+					   context->GetAttr("ret_inf_on_ovf", &_mask.ret_inf_on_ovf));
+		
+		// Check that use_est_bias is 0 or 1
+		OP_REQUIRES(context, _mask.ret_inf_on_ovf >= 0 && _mask.ret_inf_on_ovf <= 1,
+					errors::InvalidArgument("Need ret_inf_on_ovf in {0,1}, got ",
+											_mask.ret_inf_on_ovf));
 	}
 
 	void Compute(OpKernelContext *context) override

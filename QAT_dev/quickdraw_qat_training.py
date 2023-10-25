@@ -13,7 +13,7 @@ def learning_curve(history):
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
     plt.legend(['training sample loss', 'validation sample loss'])
-    # plt.savefig('Learning_curve.pdf')
+    plt.savefig('Learning_curve.pdf')
     plt.show()
     plt.close()
 

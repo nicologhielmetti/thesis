@@ -12,9 +12,68 @@ const unsigned short f32_e_bits = 8;
 const unsigned short f32_bits = 32;
 const u_int32_t ieee_bias = (1 << (f32_e_bits - 1)) - 1;
 
+//void print_f_as_bin(float value) {
+//    // Create an integer with the same binary representation as the float
+//    uint32_t intValue;
+//    std::memcpy(&intValue, &value, sizeof(value));
+//
+//    std::cout << "0b";
+//    // Extract and print each bit
+//    for (int i = 31; i >= 0; i--) {
+//        int bit = (intValue >> i) & 1;
+//        std::cout << bit;
+//    }
+//
+//    std::cout << std::endl;
+//}
+
 u_int32_t po2_pow32(const unsigned short &exp)
 {
     return (1U << exp);
+}
+
+float closest_to_zero(const u_int32_t &est_bias, const unsigned short &e_bits, const unsigned short &m_bits)
+{
+    u_int32_t sign = 0;
+    u_int32_t exp = ieee_bias - po2_pow32(e_bits - 1) + est_bias;
+    u_int32_t man = 0;
+    exp = exp << f32_m_bits;
+    u_int32_t bits = sign | exp | man;
+    return (*((float*)(&bits)));
+}
+
+float delta(const u_int32_t &est_bias, const unsigned short &e_bits, const unsigned short &m_bits)
+{
+    float closest = closest_to_zero(est_bias, e_bits, m_bits);
+    u_int32_t bits = (*((u_int32_t*)(&closest)));
+    u_int32_t man = 1 << (f32_m_bits - m_bits);
+    bits = bits | man;
+    float closest_man_lsb_1 = (*((float*)(&bits)));
+    float delta = closest_man_lsb_1 - closest;
+    // print_f_as_bin(delta);
+    return delta;
+}
+
+float closest_to_zero(const unsigned short &e_bits, const unsigned short &m_bits)
+{
+    u_int32_t sign = 0;
+    u_int32_t exp = ieee_bias - po2_pow32(e_bits - 1);
+    u_int32_t man = 0;
+    exp = exp << f32_m_bits;
+    u_int32_t bits = sign | exp | man;
+    return (*((float*)(&bits)));
+}
+
+float delta(const unsigned short &e_bits, const unsigned short &m_bits)
+{
+    float closest = closest_to_zero(e_bits, m_bits);
+    u_int32_t bits = (*((u_int32_t*)(&closest)));
+    u_int32_t man = 1 << (f32_m_bits - m_bits);
+    bits = bits | man;
+    float closest_man_lsb_1 = (*((float*)(&bits)));
+    float delta = closest_man_lsb_1 - closest;
+    // print_f_as_bin(delta);
+    return delta;
 }
 
 float max(const unsigned short &e_bits, const unsigned short &m_bits)
@@ -25,7 +84,6 @@ float max(const unsigned short &e_bits, const unsigned short &m_bits)
     exp = exp << f32_m_bits;
     man = man << (f32_m_bits - m_bits);
     u_int32_t bits = sign | exp | man;
-
     return (*((float*)(&bits)));
 }
 
@@ -155,4 +213,8 @@ PYBIND11_MODULE(fpquantizer, m) {
     m.def("compute_nogil", py::overload_cast<std::vector<float>&, const u_int32_t &, const unsigned short &, const unsigned short &>(&compute), py::call_guard<py::gil_scoped_release>());
     m.def("max", &max);
     m.def("min", &min);
+    m.def("closest_to_zero", py::overload_cast<const u_int32_t &, const unsigned short&, const unsigned short&>(&closest_to_zero));
+    m.def("closest_to_zero", py::overload_cast<const unsigned short&, const unsigned short&>(&closest_to_zero));
+    m.def("delta", py::overload_cast<const u_int32_t &, const unsigned short&, const unsigned short&>(&delta));
+    m.def("delta", py::overload_cast<const unsigned short&, const unsigned short&>(&delta));
 }
