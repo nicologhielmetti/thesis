@@ -9,5 +9,5 @@ dependencies:
     - matplotlib
     - numpy
     - scikit-learn
-    - tensorflow=2.7.0
+    - tensorflow==2.7.0
     - git+https://github.com/nicologhielmetti/qkeras.git@flopo-quantization
