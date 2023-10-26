@@ -104,6 +104,20 @@ class quantized_float_sigmoid(BaseQuantizer):
                                      use_est_bias=self.use_est_bias, ret_inf_on_ovf=self.ret_inf_on_ovf)
         return y + tf.stop_gradient(-y + yq)
 
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
+    def get_config(self):
+        config = {
+            "exponent_bits": self.exponent_bits,
+            "mantissa_bits": self.mantissa_bits,
+            "est_bias": self.est_bias,
+            "use_est_bias": self.use_est_bias,
+            "ret_inf_on_ovf": self.ret_inf_on_ovf
+        }
+        return config
+
 
 class quantized_float_softmax(BaseQuantizer):
     def __init__(self, exponent_bits, mantissa_bits, est_bias=0, use_est_bias=0, ret_inf_on_ovf=0):
