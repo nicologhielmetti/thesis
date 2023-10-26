@@ -1,3 +1,6 @@
+import sys
+sys.path.extend(['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ-dev', '/data1/home/ghielmetti/thesis/QAT_dev', '/data1/home/ghielmetti/thesis/models'])
+
 import numpy as np
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from models_and_data import ModelsAndData
@@ -9,7 +12,8 @@ y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
 
 quickdraw_quantized = ModelsAndData.get_quickdraw()
 
-mc = ModelCheckpoint('best_model_full_quantized_4_4.h5', monitor='val_loss', mode='min', save_best_only=True)
+mc = ModelCheckpoint('ckpt_quickdraw_not_quantized/quickdraw_not_quantized.h5', monitor='val_loss',
+                     mode='min', save_best_only=True)
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
 tb = TensorBoard(
     log_dir='tensorboard_logs_best_model_not_quantized',

@@ -1,3 +1,5 @@
+# import sys
+# sys.path.extend(['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ-dev', '/data1/home/ghielmetti/thesis/QAT_dev', '/data1/home/ghielmetti/thesis/models'])
 # import numpy as np
 # from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 # from matplotlib import pyplot as plt

@@ -1,23 +1,11 @@
+import sys
+sys.path.extend(['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ-dev', '/data1/home/ghielmetti/thesis/QAT_dev', '/data1/home/ghielmetti/thesis/models'])
+
 import numpy as np
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from matplotlib import pyplot as plt
-
 from models_and_data import ModelsAndData
 from quantized_float_tf import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
-
-
-def learning_curve(history):
-    plt.figure(figsize=(10, 8))
-    plt.plot(history.history['loss'], linewidth=1)
-    plt.plot(history.history['val_loss'], linewidth=1)
-    plt.title('Model Loss over Epochs')
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
-    plt.legend(['training sample loss', 'validation sample loss'])
-    plt.savefig('Learning_curve.pdf')
-    plt.show()
-    plt.close()
-
 
 X_train = np.load('../models/quickdraw_dataset/X_train.npy', allow_pickle=True)
 y_train = np.load('../models/quickdraw_dataset/y_train.npy', allow_pickle=True)
@@ -64,7 +52,8 @@ quantizer_dict = \
     }
 quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
 
-mc = ModelCheckpoint('best_model_full_quantized_4_4.h5', monitor='val_loss', mode='min', save_best_only=True)
+mc = ModelCheckpoint('ckpt_quckdraw_full_quantized_4_4/quickdraw_full_quantized_4_4.h5',
+                     verbose=1, monitor='val_loss', mode='min')
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
 tb = TensorBoard(
     log_dir='tensorboard_logs_best_model_full_quantized_4_4',
@@ -76,4 +65,4 @@ tb = TensorBoard(
 quickdraw_quantized.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=50,
                                   validation_split=0.2, shuffle=True, callbacks=[mc, es, tb],
-                                  use_multiprocessing=True)
+                                  use_multiprocessing=True, workers=28)
