@@ -68,7 +68,7 @@ class ModelsAndData:
     @staticmethod
     def get_quickdraw_quantized(quantizer_dict):
         # Input layer
-        input_layer = Input(shape=(100, 3), dtype='float32', name='input')
+        input_layer = Input(shape=(100, 3), dtype='float32', name='input_layer')
 
         # LSTM layer
         lstm_layer = QLSTM(units=128, activation='tanh', recurrent_activation='sigmoid', use_bias=True,
@@ -111,6 +111,62 @@ class ModelsAndData:
                          name='dense_6')(dense_2)
 
         output_layer = Softmax()(dense_3)
+
+        # Create the Keras model
+        model = Model(inputs=input_layer, outputs=output_layer, name='quickdraw')
+        return model
+
+    @staticmethod
+    def get_quickdraw_quantized_all_quantized(quantizer_dict):
+        # Input layer
+        input_layer = Input(shape=(100, 3), dtype='float32', name='input_layer')
+
+        quantized_input = QActivation(activation=quantizer_dict['quantized_input']['activation'])(input_layer)
+
+        # LSTM layer
+        lstm_layer = QLSTM(units=128, activation=quantizer_dict['lstm_1']['activation'],
+                           recurrent_activation=quantizer_dict['lstm_1']['recurrent_activation'],
+                           use_bias=True,
+                           kernel_initializer=GlorotUniform(seed=None),
+                           recurrent_initializer=Orthogonal(gain=1.0, seed=None),
+                           bias_initializer=Zeros(),
+                           kernel_quantizer=quantizer_dict['lstm_1']['kernel_quantizer'],
+                           recurrent_quantizer=quantizer_dict['lstm_1']['recurrent_quantizer'],
+                           bias_quantizer=quantizer_dict['lstm_1']['bias_quantizer'],
+                           state_quantizer=quantizer_dict['lstm_1']['state_quantizer'],
+                           name='lstm_1')(quantized_input)
+
+        # Dropout layer
+        dropout_1 = Dropout(rate=0.6, name='dropout_2')(lstm_layer)
+
+        # Dense layer
+        dense_1 = QDense(units=256, activation=quantizer_dict['dense_3']['activation'], use_bias=True,
+                         kernel_initializer=GlorotUniform(seed=None), bias_initializer=Zeros(),
+                         kernel_quantizer=quantizer_dict['dense_3']['kernel_quantizer'],
+                         bias_quantizer=quantizer_dict['dense_3']['bias_quantizer'],
+                         name='dense_3')(
+            dropout_1)
+
+        # Dropout layer
+        dropout_2 = Dropout(rate=0.5, name='dropout_4')(dense_1)
+
+        # Dense layer
+        dense_2 = QDense(units=128, activation=quantizer_dict['dense_5']['activation'], use_bias=True,
+                         kernel_initializer=GlorotUniform(seed=None), bias_initializer=Zeros(),
+                         kernel_quantizer=quantizer_dict['dense_5']['kernel_quantizer'],
+                         bias_quantizer=quantizer_dict['dense_5']['bias_quantizer'],
+                         name='dense_5')(
+            dropout_2)
+
+        # Dense output layer
+        dense_3 = QDense(units=5, use_bias=True,
+                         activation=quantizer_dict['dense_6']['activation'],
+                         kernel_initializer=LecunUniform(seed=None), bias_initializer=Zeros(),
+                         kernel_quantizer=quantizer_dict['dense_6']['kernel_quantizer'],
+                         bias_quantizer=quantizer_dict['dense_6']['bias_quantizer'],
+                         name='dense_6')(dense_2)
+
+        output_layer = QActivation(activation=quantizer_dict['softmax']['activation'], name='softmax')(dense_3)
 
         # Create the Keras model
         model = Model(inputs=input_layer, outputs=output_layer, name='quickdraw')

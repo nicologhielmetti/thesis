@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from models_and_data import ModelsAndData
-from quantized_float_tf import quantized_float
+from quantized_float_tf import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
 
 
 def learning_curve(history):
@@ -25,8 +25,14 @@ y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
 
 quantizer_dict = \
     {
+        'quantized_input':
+            {
+                'activation': quantized_float(4, 4)
+            },
         'lstm_1':
             {
+                'activation': quantized_float_tanh(4, 4),
+                'recurrent_activation': quantized_float_sigmoid(4, 4),
                 'kernel_quantizer': quantized_float(4, 4),
                 'recurrent_quantizer': quantized_float(4, 4),
                 'bias_quantizer': quantized_float(4, 4),
@@ -34,21 +40,29 @@ quantizer_dict = \
             },
         'dense_3':
             {
+                'activation': quantized_float(4, 4),
                 'kernel_quantizer': quantized_float(4, 4),
                 'bias_quantizer': quantized_float(4, 4)
             },
         'dense_5':
             {
+                'activation': quantized_float(4, 4),
                 'kernel_quantizer': quantized_float(4, 4),
                 'bias_quantizer': quantized_float(4, 4)
             },
         'dense_6':
             {
+                'activation': quantized_float(4, 4),
                 'kernel_quantizer': quantized_float(4, 4),
                 'bias_quantizer': quantized_float(4, 4)
+            },
+        'softmax':
+            {
+                'activation': quantized_float_softmax(4, 4)
             }
     }
-quickdraw_quantized = ModelsAndData.get_quickdraw_quantized(quantizer_dict=quantizer_dict)
+quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
+# quickdraw_quantized = ModelsAndData.get_quickdraw()
 
 quickdraw_quantized.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=50,
