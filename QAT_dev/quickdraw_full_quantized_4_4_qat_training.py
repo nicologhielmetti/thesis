@@ -1,5 +1,5 @@
 import numpy as np
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from matplotlib import pyplot as plt
 
 from models_and_data import ModelsAndData
@@ -63,13 +63,17 @@ quantizer_dict = \
             }
     }
 quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
-# quickdraw_quantized = ModelsAndData.get_quickdraw()
 
 mc = ModelCheckpoint('best_model_full_quantized_4_4.h5', monitor='val_loss', mode='min', save_best_only=True)
-es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
+es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
+tb = TensorBoard(
+    log_dir='tensorboard_logs_best_model_full_quantized_4_4',
+    histogram_freq=1,
+    write_graph=True,
+    write_images=True,
+    update_freq='batch',
+)
 quickdraw_quantized.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=50,
-                                  validation_split=0.2, shuffle=True, callbacks=[mc, es],
+                                  validation_split=0.2, shuffle=True, callbacks=[mc, es, tb],
                                   use_multiprocessing=True)
-
-learning_curve(history)
