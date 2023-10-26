@@ -1,4 +1,5 @@
 import numpy as np
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from matplotlib import pyplot as plt
 
 from models_and_data import ModelsAndData
@@ -64,9 +65,11 @@ quantizer_dict = \
 quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
 # quickdraw_quantized = ModelsAndData.get_quickdraw()
 
+mc = ModelCheckpoint('best_model_full_quantized_4_4.h5', monitor='val_loss', mode='min', save_best_only=True)
+es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=50)
 quickdraw_quantized.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=50,
-                                  validation_split=0.2, shuffle=True, callbacks=None,
-                                  use_multiprocessing=True, workers=12)
+                                  validation_split=0.2, shuffle=True, callbacks=[mc, es],
+                                  use_multiprocessing=True)
 
 learning_curve(history)
