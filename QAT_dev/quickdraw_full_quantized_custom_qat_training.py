@@ -155,7 +155,7 @@ class QuantizerEncoder(JSONEncoder):
 
 
 with open(model_id + '_quantizer_dict.json', 'w') as json_file:
-    json.dump(quantizer_dict, json_file, default=vars)
+    json.dump(quantizer_dict, json_file, default=vars, indent=4)
 
 quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
 
