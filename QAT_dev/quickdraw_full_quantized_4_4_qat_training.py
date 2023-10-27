@@ -1,6 +1,7 @@
 import json
 import sys
 from datetime import datetime
+from json import JSONEncoder
 
 sys.path.extend(
     ['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ_dev', '/data1/home/ghielmetti/thesis/QAT_dev',
@@ -15,7 +16,6 @@ X_train = np.load('../models/quickdraw_dataset/X_train.npy', allow_pickle=True)
 y_train = np.load('../models/quickdraw_dataset/y_train.npy', allow_pickle=True)
 X_test = np.load('../models/quickdraw_dataset/X_test.npy', allow_pickle=True)
 y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
-
 
 # class EpochCallbacks(keras.callbacks.Callback):
 #     def __init__(self, epoch):
@@ -66,10 +66,19 @@ quantizer_dict = \
 quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
 
 
+class QuantizerEncoder(JSONEncoder):
+    def default(self, o):
+        try:
+            r = o.__dict__
+        except:
+            r = ''
+        return r
+
+
 model_id = 'quickdraw_full_quantized_4_4'
 
 with open(model_id + '_quantizer_dict.json', 'w') as json_file:
-    json.dump(quantizer_dict, json_file, default=vars, indent=4)
+    json.dump(quantizer_dict, json_file, cls=QuantizerEncoder, indent=4)
 
 time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
 # ec = EpochCallbacks(epoch)
@@ -93,4 +102,3 @@ test_perf = quickdraw_quantized.evaluate(x=X_test, y=y_test, verbose=1, workers=
                                          return_dict=True, callbacks=[mc, es, tb])
 with open('ckpt_' + model_id + '_' + time_str + '/' + model_id + '_test_performance.json', 'w') as json_file:
     json.dump(test_perf, json_file)
-
