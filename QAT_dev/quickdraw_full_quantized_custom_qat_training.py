@@ -56,7 +56,7 @@ activation_analyzer = CustomFloPoAnalyzerKeras(keras_model, activations_file_nam
 
 data_activations = activation_analyzer.analyze(profile_timing=True)
 activations_analysis = activation_analyzer.mantissa_exponent_analysis()
-activation_analyzer.make_plots()
+# activation_analyzer.make_plots()
 
 weight_analyzer = CustomFloPoAnalyzerKeras(keras_model, weights_file_name,
                                                  partial(Common.get_weights_keras, keras_model),
@@ -64,7 +64,7 @@ weight_analyzer = CustomFloPoAnalyzerKeras(keras_model, weights_file_name,
 
 data_weights = weight_analyzer.analyze(profile_timing=True)
 weight_analysis = weight_analyzer.mantissa_exponent_analysis()
-weight_analyzer.make_plots()
+# weight_analyzer.make_plots()
 
 del data_weights
 del data_activations
@@ -83,11 +83,11 @@ act_softmax_exp = activations_analysis['layer_data']['softmax']['exact_values'][
 act_dense_5_exp = activations_analysis['layer_data']['dense_5']['exact_values']['min_exponent_bits']
 act_dense_3_exp = activations_analysis['layer_data']['dense_3']['exact_values']['min_exponent_bits']
 
-act_dense_6_man = min(activations_analysis['layer_data']['dense_6']['exact_values']['min_man_bits'], 4)
-act_lstm_1_man = min(activations_analysis['layer_data']['lstm_1']['exact_values']['min_man_bits'], 4)
-act_softmax_man = min(activations_analysis['layer_data']['softmax']['exact_values']['min_man_bits'], 4)
-act_dense_5_man = min(activations_analysis['layer_data']['dense_5']['exact_values']['min_man_bits'], 4)
-act_dense_3_man = min(activations_analysis['layer_data']['dense_3']['exact_values']['min_man_bits'], 4)
+act_dense_6_man = min(activations_analysis['layer_data']['dense_6']['exact_values']['min_mantissa_bits'], 4)
+act_lstm_1_man = min(activations_analysis['layer_data']['lstm_1']['exact_values']['min_mantissa_bits'], 4)
+act_softmax_man = min(activations_analysis['layer_data']['softmax']['exact_values']['min_mantissa_bits'], 4)
+act_dense_5_man = min(activations_analysis['layer_data']['dense_5']['exact_values']['min_mantissa_bits'], 4)
+act_dense_3_man = min(activations_analysis['layer_data']['dense_3']['exact_values']['min_mantissa_bits'], 4)
 
 wei_dense_6_bias = weight_analysis['layer_data']['dense_6']['exact_values']['exact_bias']
 wei_lstm_1_bias = weight_analysis['layer_data']['lstm_1']['exact_values']['exact_bias']
@@ -99,10 +99,10 @@ wei_lstm_1_exp = weight_analysis['layer_data']['lstm_1']['exact_values']['min_ex
 wei_dense_5_exp = weight_analysis['layer_data']['dense_5']['exact_values']['min_exponent_bits']
 wei_dense_3_exp = weight_analysis['layer_data']['dense_3']['exact_values']['min_exponent_bits']
 
-wei_dense_6_man = min(weight_analysis['layer_data']['dense_6']['exact_values']['min_man_bits'], 4)
-wei_lstm_1_man = min(weight_analysis['layer_data']['lstm_1']['exact_values']['min_man_bits'], 4)
-wei_dense_5_man = min(weight_analysis['layer_data']['dense_5']['exact_values']['min_man_bits'], 4)
-wei_dense_3_man = min(weight_analysis['layer_data']['dense_3']['exact_values']['min_man_bits'], 4)
+wei_dense_6_man = min(weight_analysis['layer_data']['dense_6']['exact_values']['min_mantissa_bits'], 4)
+wei_lstm_1_man = min(weight_analysis['layer_data']['lstm_1']['exact_values']['min_mantissa_bits'], 4)
+wei_dense_5_man = min(weight_analysis['layer_data']['dense_5']['exact_values']['min_mantissa_bits'], 4)
+wei_dense_3_man = min(weight_analysis['layer_data']['dense_3']['exact_values']['min_mantissa_bits'], 4)
 
 
 quantizer_dict = \
