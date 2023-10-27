@@ -12,6 +12,7 @@ tf_fpquantizer = tf.load_op_library('tf_fpquantizer/tf_fpquantizer.so')
 class quantized_float(BaseQuantizer):
     def __init__(self, exponent_bits, mantissa_bits, est_bias=0, use_est_bias=0, ret_inf_on_ovf=0, epoch=None):
         super(quantized_float, self).__init__()
+        self.quantizer_name = self.__class__.__name__
         self.exponent_bits = exponent_bits
         self.mantissa_bits = mantissa_bits
         self.est_bias = est_bias
@@ -52,14 +53,11 @@ class quantized_float(BaseQuantizer):
         }
         return config
 
-    class QuantizerEncoder(JSONEncoder):
-        def default(self, o):
-            return o.__dict__.update({'quantizer_name': self.__class__.__name__})
-
 
 class quantized_float_tanh(BaseQuantizer):
     def __init__(self, exponent_bits, mantissa_bits, est_bias=0, use_est_bias=0, ret_inf_on_ovf=0, epoch=None):
         super(quantized_float_tanh, self).__init__()
+        self.quantizer_name = self.__class__.__name__
         self.exponent_bits = exponent_bits
         self.mantissa_bits = mantissa_bits
         self.est_bias = est_bias
@@ -101,14 +99,11 @@ class quantized_float_tanh(BaseQuantizer):
         }
         return config
 
-    class QuantizerEncoder(JSONEncoder):
-        def default(self, o):
-            return o.__dict__.update({'quantizer_name': self.__class__.__name__})
-
 
 class quantized_float_sigmoid(BaseQuantizer):
     def __init__(self, exponent_bits, mantissa_bits, est_bias=0, use_est_bias=0, ret_inf_on_ovf=0, epoch=None):
         super(quantized_float_sigmoid, self).__init__()
+        self.quantizer_name = self.__class__.__name__
         self.exponent_bits = exponent_bits
         self.mantissa_bits = mantissa_bits
         self.est_bias = est_bias
@@ -147,14 +142,11 @@ class quantized_float_sigmoid(BaseQuantizer):
         }
         return config
 
-    class QuantizerEncoder(JSONEncoder):
-        def default(self, o):
-            return o.__dict__.update({'quantizer_name': self.__class__.__name__})
-
 
 class quantized_float_softmax(BaseQuantizer):
     def __init__(self, exponent_bits, mantissa_bits, est_bias=0, use_est_bias=0, ret_inf_on_ovf=0, epoch=None):
         super(quantized_float_softmax, self).__init__()
+        self.quantizer_name = self.__class__.__name__
         self.exponent_bits = exponent_bits
         self.mantissa_bits = mantissa_bits
         self.est_bias = est_bias
@@ -192,7 +184,3 @@ class quantized_float_softmax(BaseQuantizer):
             "ret_inf_on_ovf": self.ret_inf_on_ovf
         }
         return config
-
-    class QuantizerEncoder(JSONEncoder):
-        def default(self, o):
-            return o.__dict__.update({'quantizer_name': self.__class__.__name__})

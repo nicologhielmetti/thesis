@@ -2,6 +2,7 @@ import json
 import sys
 from datetime import datetime
 from functools import partial
+from json import JSONEncoder
 
 from tensorflow import keras
 
@@ -51,16 +52,16 @@ weights_file_name = keras_model.name
 
 activation_analyzer = CustomFloPoAnalyzerKeras(keras_model, activations_file_name,
                                                partial(Common.get_activations_keras, keras_model,
-                                                             X_test[:ds_len]),
-                                                     'activations')
+                                                       X_test[:ds_len]),
+                                               'activations')
 
 data_activations = activation_analyzer.analyze(profile_timing=True)
 activations_analysis = activation_analyzer.mantissa_exponent_analysis()
 # activation_analyzer.make_plots()
 
 weight_analyzer = CustomFloPoAnalyzerKeras(keras_model, weights_file_name,
-                                                 partial(Common.get_weights_keras, keras_model),
-                                                 'weights')
+                                           partial(Common.get_weights_keras, keras_model),
+                                           'weights')
 
 data_weights = weight_analyzer.analyze(profile_timing=True)
 weight_analysis = weight_analyzer.mantissa_exponent_analysis()
@@ -104,7 +105,6 @@ wei_lstm_1_man = min(weight_analysis['layer_data']['lstm_1']['exact_values']['mi
 wei_dense_5_man = min(weight_analysis['layer_data']['dense_5']['exact_values']['min_mantissa_bit'], 4)
 wei_dense_3_man = min(weight_analysis['layer_data']['dense_3']['exact_values']['min_mantissa_bit'], 4)
 
-
 quantizer_dict = \
     {
         'quantized_input':
@@ -114,7 +114,8 @@ quantizer_dict = \
         'lstm_1':
             {
                 'activation': quantized_float_tanh(act_lstm_1_exp, act_lstm_1_man, act_lstm_1_bias, use_est_bias=1),
-                'recurrent_activation': quantized_float_sigmoid(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias, use_est_bias=1),
+                'recurrent_activation': quantized_float_sigmoid(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias,
+                                                                use_est_bias=1),
                 'kernel_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias, use_est_bias=1),
                 'recurrent_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias, use_est_bias=1),
                 'bias_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias, use_est_bias=1),
@@ -140,14 +141,21 @@ quantizer_dict = \
             },
         'softmax':
             {
-                'activation': quantized_float_softmax(act_softmax_exp, act_softmax_man, act_softmax_bias, use_est_bias=1)
+                'activation': quantized_float_softmax(act_softmax_exp, act_softmax_man, act_softmax_bias,
+                                                      use_est_bias=1)
             }
     }
 
 model_id = 'quickdraw_full_quantized_custom'
 
+
+class QuantizerEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__.update({'quantizer_name': self.__class__.__name__})
+
+
 with open(model_id + '_quantizer_dict.json', 'w') as json_file:
-    json.dump(quantizer_dict, json_file)
+    json.dump(quantizer_dict, json_file, default=vars)
 
 quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
 
@@ -167,9 +175,9 @@ tb = TensorBoard(
 quickdraw_quantized.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=50,
                                   validation_split=0.2, shuffle=True, callbacks=[mc, es, tb],
-                                  use_multiprocessing=True, workers=28*2)
+                                  use_multiprocessing=True, workers=28 * 2)
 
-test_perf = quickdraw_quantized.evaluate(x=X_test, y=y_test, verbose=1, workers=28*2, use_multiprocessing=True,
+test_perf = quickdraw_quantized.evaluate(x=X_test, y=y_test, verbose=1, workers=28 * 2, use_multiprocessing=True,
                                          return_dict=True, callbacks=[mc, es, tb])
 with open('ckpt_' + model_id + '_' + time_str + '/' + model_id + '_test_performance.json', 'w') as json_file:
     json.dump(test_perf, json_file)
