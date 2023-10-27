@@ -149,14 +149,14 @@ std::vector<float> compute(std::vector<float> &v)
         {
             float f = m_floats_distance<float>(*(it), *(it+1));
             res.push_back(f);
-            if(f > std::pow(2, 24))
+          /*  if(f > std::pow(2, 24))
             {
                 std::cout << "ULP: " << f << "\n1st val: " << *(it) << " bin: ";
                 print_f_as_bin(*(it));
                 std::cout << "2nd val: " << *(it+1) << " bin: ";
                 print_f_as_bin(*(it+1));
                 std::cout << "\n";
-            }
+            } */
         }
         return res;
     }

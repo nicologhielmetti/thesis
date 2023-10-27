@@ -24,15 +24,15 @@ class CustomFloPoAnalyzerKeras:
         self.exp_data = []
         self.string_id = string_id
         self.analysis_data = {}
-        ulp_file_path = 'profiling-data/ULP' + '-' + self.string_id + '-' + file_name_id + '.pkl'
-        exp_file_path = 'profiling-data/EXP' + '-' + self.string_id + '-' + file_name_id + '.pkl'
+        ulp_file_path = 'profiling_data/ULP' + '_' + self.string_id + '_' + file_name_id + '.pkl'
+        exp_file_path = 'profiling_data/EXP' + '_' + self.string_id + '_' + file_name_id + '.pkl'
         if not os.path.isfile(ulp_file_path) or not os.path.isfile(exp_file_path):
             united_data = get_data_func()
             data_gb = united_data.groupby('layer_name')
             self.splitted_data = [data_gb.get_group(x) for x in data_gb.groups]
 
     def _analysis(self, data, compute_function, profile_timing, computation_id):
-        file_path = 'profiling-data/' + computation_id + '_' + self.string_id + '_' + self.file_name_id + '.pkl'
+        file_path = 'profiling_data/' + computation_id + '_' + self.string_id + '_' + self.file_name_id + '.pkl'
         if self.file_name_id is not None and os.path.isfile(file_path):
             with open(file_path, 'rb') as f:
                 data.extend(pickle.load(f))
@@ -62,8 +62,8 @@ class CustomFloPoAnalyzerKeras:
 
         data.extend(list(_queue.queue))
         if self.file_name_id is not None:
-            if not os.path.exists('profiling-data'):
-                os.makedirs('profiling-data')
+            if not os.path.exists('profiling_data'):
+                os.makedirs('profiling_data')
             with open(file_path, 'wb') as f:
                 pickle.dump(data, f)
         return data
@@ -97,11 +97,11 @@ class CustomFloPoAnalyzerKeras:
         if not self.analysis_data:
             self._generate_df_mantissa_exponent_analysis(min_value_filter_ulp, min_value_filter_exp, ulp_percentiles)
         analysis_data = copy.deepcopy(self.analysis_data)
-        for d in analysis_data['layer_data']:
-            d.pop('plot_data')
-        if not os.path.exists('analysis-report'):
-            os.makedirs('analysis-report')
-        with open('analysis-report/' + self.string_id + '_' + self.file_name_id + '_PTQ_analysis.json', 'w') as fp:
+        for _, v in analysis_data['layer_data'].items():
+            v.pop('plot_data')
+        if not os.path.exists('analysis_report'):
+            os.makedirs('analysis_report')
+        with open('analysis_report/' + self.string_id + '_' + self.file_name_id + '_PTQ_analysis.json', 'w') as fp:
             json.dump(analysis_data, fp, sort_keys=True, indent=4)
         return analysis_data
 
@@ -112,12 +112,11 @@ class CustomFloPoAnalyzerKeras:
         res = \
             {
                 'ulp_percentiles': ulp_percentiles,
-                'layer_data': []
+                'layer_data': {}
             }
         for u, e in zip(self.ulp_data, self.exp_data):
             single_res = \
                 {
-                    'layer_name': '',
                     'plot_data':
                         {
                             'ulps_count': pd.pandas.DataFrame(),
@@ -180,20 +179,19 @@ class CustomFloPoAnalyzerKeras:
                                                                                 single_res['exact_values']['max_exp'])
             single_res['exact_values']['min_ulp'] = min(df_u['ULP'])
             single_res['exact_values']['min_mantissa_bit'] = int(23 - np.ceil(np.log2(min(df_u['ULP']))))
-            single_res['layer_name'] = u['layer_name']
-            res['layer_data'].append(single_res)
+            res['layer_data'].update({u['layer_name']: single_res})
         self.analysis_data = res
         return res
 
     def _ulp_plot(self, plot_ulp, plot_cumulative, colors):
-        for d in self.analysis_data['layer_data']:
+        for k, d in self.analysis_data['layer_data'].items():
             if plot_ulp:
                 fig, ax = plt.subplots(figsize=(16, 9))
                 p = sns.barplot(d['plot_data']['ulps_count_filtered'], x='ULP', y='count', ax=ax, lw=0.)
                 every_x = (len(ax.get_xticks()) // 50) + 1
                 ax.set_xticks(ax.get_xticks()[::every_x])
                 p.tick_params(labelrotation=45)
-                p.set_title('Distribution of ULP values of ' + self.string_id + ' for layer ' + d['layer_name'])
+                p.set_title('Distribution of ULP values of ' + self.string_id + ' for layer ' + k)
                 p.set_xlabel('ULP [pure number]')
                 p.set_ylabel('Number of occurrences [pure number]')
                 plt.ylim(
@@ -202,9 +200,9 @@ class CustomFloPoAnalyzerKeras:
                     round(d['plot_data']['ulps_count_filtered']['count'].max() + d['plot_data']['ulps_count_filtered'][
                         'count'].max() * 0.1)
                 )
-                if not os.path.exists(self.model.name + '-plots/'):
-                    os.makedirs(self.model.name + '-plots/')
-                plt.savefig(self.model.name + '-plots/' + self.string_id + '_' + d['layer_name'] + '_ulp.png', dpi=500)
+                if not os.path.exists(self.model.name + '_plots/'):
+                    os.makedirs(self.model.name + '_plots/')
+                plt.savefig(self.model.name + '_plots/' + self.string_id + '_' + k + '_ulp.png', dpi=500)
                 plt.close(fig)
             if plot_cumulative:
                 fig, ax = plt.subplots(figsize=(16, 9))
@@ -213,7 +211,7 @@ class CustomFloPoAnalyzerKeras:
                 ax.set_yticks([n for n in np.arange(0, 101, 5)])
                 p = sns.lineplot(d['plot_data']['ulps_count'], x='ULP', y='count_sum_%', ax=ax)  # , marker='o')
                 p.tick_params(labelrotation=45)
-                p.set_title('Cumulative Distribution Function of ' + self.string_id + ' for layer ' + d['layer_name'])
+                p.set_title('Cumulative Distribution Function of ' + self.string_id + ' for layer ' + k)
                 p.set_xlabel('ULP [pure number]')
                 p.set_ylabel('ULP Sum Percentage [\%]')
 
@@ -232,22 +230,23 @@ class CustomFloPoAnalyzerKeras:
 
                 # Add a legend to the plot
                 ax.legend()
-                if not os.path.exists(self.model.name + '-plots/'):
-                    os.makedirs(self.model.name + '-plots/')
-                plt.savefig(self.model.name + '-plots/' + self.string_id + '_' + d['layer_name'] + '_ulp_cdf.png', dpi=500)
+                if not os.path.exists(self.model.name + '_plots/'):
+                    os.makedirs(self.model.name + '_plots/')
+                plt.savefig(self.model.name + '_plots/' + self.string_id + '_' + k + '_ulp_cdf.png',
+                            dpi=500)
                 plt.close(fig)
 
     def _exp_plot(self):
-        for d in self.analysis_data['layer_data']:
+        for k, d in self.analysis_data['layer_data'].items():
             fig, ax = plt.subplots(figsize=(16, 9))
             p = sns.barplot(d['plot_data']['exps_count_filtered'], x='EXP', y='count', ax=ax, lw=0.)
             p.tick_params(labelrotation=45)
-            p.set_title('Distribution of Exponent values of ' + self.string_id + ' for layer ' + d['layer_name'])
+            p.set_title('Distribution of Exponent values of ' + self.string_id + ' for layer ' + k)
             p.set_xlabel('Exponent value [pure number]')
             p.set_ylabel('Number of occurrences [pure number]')
-            if not os.path.exists(self.model.name + '-plots/'):
-                os.makedirs(self.model.name + '-plots/')
-            plt.savefig(self.model.name + '-plots/' + self.string_id + '_' + d['layer_name'] + '_exp.png', dpi=500)
+            if not os.path.exists(self.model.name + '_plots/'):
+                os.makedirs(self.model.name + '_plots/')
+            plt.savefig(self.model.name + '_plots/' + self.string_id + '_' + k + '_exp.png', dpi=500)
             plt.close(fig)
 
     def make_plots(self, ulp=True, exp=True, cumulative=True, ulp_percentiles=None, colors=None,

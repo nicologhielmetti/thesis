@@ -1,5 +1,7 @@
+import json
+from datetime import datetime
 import sys
-sys.path.extend(['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ-dev', '/data1/home/ghielmetti/thesis/QAT_dev', '/data1/home/ghielmetti/thesis/models'])
+sys.path.extend(['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ_dev', '/data1/home/ghielmetti/thesis/QAT_dev', '/data1/home/ghielmetti/thesis/models'])
 
 import numpy as np
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
@@ -11,18 +13,25 @@ X_test = np.load('../models/quickdraw_dataset/X_test.npy', allow_pickle=True)
 y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
 
 quickdraw_quantized = ModelsAndData.get_quickdraw()
-
-mc = ModelCheckpoint('ckpt_quickdraw_not_quantized/quickdraw_not_quantized.h5', monitor='val_loss',
-                     mode='min', save_best_only=True)
-es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
+model_id = 'quickdraw_not_quantized'
+time_str = datetime.now().strftime("%Y%m%d-%H%M%S")
+mc = ModelCheckpoint('ckpt_' + model_id + '_' + time_str + '/' + model_id + '_{epoch:02d}-{val_loss:.2f}.h5',
+                     verbose=2, monitor='val_loss', mode='min', save_best_only=True)
+es = EarlyStopping(monitor='val_loss', mode='min', verbose=2, patience=5)
 tb = TensorBoard(
-    log_dir='tensorboard_logs_best_model_not_quantized',
+    log_dir='tensorboard_logs/' + model_id + '_' + time_str,
     histogram_freq=1,
-    write_graph=True,
-    write_images=True,
+    write_graph=False,
+    write_images=False,
     update_freq='batch',
+    profile_batch=0
 )
 quickdraw_quantized.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=50,
+history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=2,
                                   validation_split=0.2, shuffle=True, callbacks=[mc, es, tb],
-                                  use_multiprocessing=True)
+                                  use_multiprocessing=True, workers=28)
+
+test_perf = quickdraw_quantized.evaluate(x=X_test, y=y_test, verbose=1, workers=28, use_multiprocessing=True,
+                                         return_dict=True, callbacks=[mc, es, tb])
+with open('ckpt_' + model_id + '_' + time_str + '/' + model_id + '_test_performance.json', 'w') as json_file:
+    json.dump(test_perf, json_file)

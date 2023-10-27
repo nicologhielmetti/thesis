@@ -14,7 +14,7 @@ from models_and_data.models import Models
 # dense_9 <function linear at 0x7ffb2cbf5ca0>
 # rnn_densef <function softmax at 0x7ffb2cbee820>
 
-model = keras.models.load_model('../../models/saved-quickdraw-model/Quickdraw5ClassLSTMFinL.h5')
+model = keras.models.load_model('../../models/saved_quickdraw_model/Quickdraw5ClassLSTMFinL.h5')
 model._name = 'quickdraw_original'
 X_test = np.load('../data/quickdraw-dataset/X_test_format.npy')
 y_test = np.load('../data/quickdraw-dataset/y_test_format.npy')
@@ -42,7 +42,7 @@ weights_file_name = model.name
 ######################################
 
 model_fixed = Models.get_quickdraw()
-model_fixed.load_weights('../../models/saved-quickdraw-model/Quickdraw5ClassLSTMFinL.h5')
+model_fixed.load_weights('../../models/saved_quickdraw_model/Quickdraw5ClassLSTMFinL.h5')
 model_fixed.predict()
 
 activations_file_name_fix = model_fixed.name + '-' + str(ds_len)
