@@ -1,3 +1,5 @@
+import json
+
 from qkeras import BaseQuantizer
 import tensorflow.keras.backend as K
 import tensorflow as tf
@@ -49,6 +51,9 @@ class quantized_float(BaseQuantizer):
         }
         return config
 
+    def toJSON(self):
+        return json.dumps(self.get_config().update({'quantizer_name': self.__class__.__name__}))
+
 
 class quantized_float_tanh(BaseQuantizer):
     def __init__(self, exponent_bits, mantissa_bits, est_bias=0, use_est_bias=0, ret_inf_on_ovf=0, epoch=None):
@@ -94,6 +99,9 @@ class quantized_float_tanh(BaseQuantizer):
         }
         return config
 
+    def toJSON(self):
+        return json.dumps(self.get_config().update({'quantizer_name': self.__class__.__name__}))
+
 
 class quantized_float_sigmoid(BaseQuantizer):
     def __init__(self, exponent_bits, mantissa_bits, est_bias=0, use_est_bias=0, ret_inf_on_ovf=0, epoch=None):
@@ -136,6 +144,9 @@ class quantized_float_sigmoid(BaseQuantizer):
         }
         return config
 
+    def toJSON(self):
+        return json.dumps(self.get_config().update({'quantizer_name': self.__class__.__name__}))
+
 
 class quantized_float_softmax(BaseQuantizer):
     def __init__(self, exponent_bits, mantissa_bits, est_bias=0, use_est_bias=0, ret_inf_on_ovf=0, epoch=None):
@@ -177,3 +188,6 @@ class quantized_float_softmax(BaseQuantizer):
             "ret_inf_on_ovf": self.ret_inf_on_ovf
         }
         return config
+
+    def toJSON(self):
+        return json.dumps(self.get_config().update({'quantizer_name': self.__class__.__name__}))
