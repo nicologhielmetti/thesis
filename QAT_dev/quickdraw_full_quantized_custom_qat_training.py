@@ -148,7 +148,6 @@ quantizer_dict = \
 
 model_id = 'quickdraw_full_quantized_custom'
 
-
 with open(model_id + '_quantizer_dict.json', 'w') as json_file:
     json.dump(quantizer_dict, json_file, default=vars, indent=4)
 
