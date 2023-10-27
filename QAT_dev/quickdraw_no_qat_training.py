@@ -14,8 +14,10 @@ y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
 
 quickdraw_quantized = ModelsAndData.get_quickdraw()
 model_id = 'quickdraw_not_quantized'
-time_str = datetime.now().strftime("%Y%m%d-%H%M%S")
-mc = ModelCheckpoint('ckpt_' + model_id + '_' + time_str + '/' + model_id + '_{epoch:02d}-{val_loss:.2f}.h5',
+
+time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+# ec = EpochCallbacks(epoch)
+mc = ModelCheckpoint('ckpt_' + model_id + '_' + time_str + '/' + model_id + '_{epoch:02d}_{val_loss:.2f}.h5',
                      verbose=2, monitor='val_loss', mode='min', save_best_only=True)
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=2, patience=5)
 tb = TensorBoard(
@@ -23,11 +25,11 @@ tb = TensorBoard(
     histogram_freq=1,
     write_graph=False,
     write_images=False,
-    update_freq='batch',
+    update_freq=1,
     profile_batch=0
 )
 quickdraw_quantized.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=2,
+history = quickdraw_quantized.fit(X_train, y_train, batch_size=512, epochs=50,
                                   validation_split=0.2, shuffle=True, callbacks=[mc, es, tb],
                                   use_multiprocessing=True, workers=28)
 
@@ -35,3 +37,4 @@ test_perf = quickdraw_quantized.evaluate(x=X_test, y=y_test, verbose=1, workers=
                                          return_dict=True, callbacks=[mc, es, tb])
 with open('ckpt_' + model_id + '_' + time_str + '/' + model_id + '_test_performance.json', 'w') as json_file:
     json.dump(test_perf, json_file)
+
