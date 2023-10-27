@@ -143,9 +143,14 @@ quantizer_dict = \
                 'activation': quantized_float_softmax(act_softmax_exp, act_softmax_man, act_softmax_bias, use_est_bias=1)
             }
     }
-quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
 
 model_id = 'quickdraw_full_quantized_custom'
+
+with open(model_id + '_quantizer_dict.json', 'w') as json_file:
+    json.dump(quantizer_dict, json_file)
+
+quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
+
 time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
 # ec = EpochCallbacks(epoch)
 mc = ModelCheckpoint('ckpt_' + model_id + '_' + time_str + '/' + model_id + '_{epoch:02d}_{val_loss:.2f}.h5',
