@@ -1,4 +1,5 @@
 import json
+from json import JSONEncoder
 
 from qkeras import BaseQuantizer
 import tensorflow.keras.backend as K
@@ -51,8 +52,9 @@ class quantized_float(BaseQuantizer):
         }
         return config
 
-    def toJSON(self):
-        return json.dumps(self.get_config().update({'quantizer_name': self.__class__.__name__}))
+    class QuantizerEncoder(JSONEncoder):
+        def default(self, o):
+            return o.__dict__.update({'quantizer_name': self.__class__.__name__})
 
 
 class quantized_float_tanh(BaseQuantizer):
@@ -99,8 +101,9 @@ class quantized_float_tanh(BaseQuantizer):
         }
         return config
 
-    def toJSON(self):
-        return json.dumps(self.get_config().update({'quantizer_name': self.__class__.__name__}))
+    class QuantizerEncoder(JSONEncoder):
+        def default(self, o):
+            return o.__dict__.update({'quantizer_name': self.__class__.__name__})
 
 
 class quantized_float_sigmoid(BaseQuantizer):
@@ -144,8 +147,9 @@ class quantized_float_sigmoid(BaseQuantizer):
         }
         return config
 
-    def toJSON(self):
-        return json.dumps(self.get_config().update({'quantizer_name': self.__class__.__name__}))
+    class QuantizerEncoder(JSONEncoder):
+        def default(self, o):
+            return o.__dict__.update({'quantizer_name': self.__class__.__name__})
 
 
 class quantized_float_softmax(BaseQuantizer):
@@ -189,5 +193,6 @@ class quantized_float_softmax(BaseQuantizer):
         }
         return config
 
-    def toJSON(self):
-        return json.dumps(self.get_config().update({'quantizer_name': self.__class__.__name__}))
+    class QuantizerEncoder(JSONEncoder):
+        def default(self, o):
+            return o.__dict__.update({'quantizer_name': self.__class__.__name__})
