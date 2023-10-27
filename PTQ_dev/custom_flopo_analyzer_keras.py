@@ -165,7 +165,7 @@ class CustomFloPoAnalyzerKeras:
             single_res['statistical_values']['min_exp_gt_min'] = min(df_e_filtered['EXP'])
             single_res['statistical_values']['max_exp_gt_min'] = max(df_e_filtered['EXP'])
             single_res['statistical_values']['bias_gt_min'] = round(
-                (single_res['statistical_values']['max_exp_gt_min'] - single_res['statistical_values'][
+                (single_res['statistical_values']['max_exp_gt_min'] + single_res['statistical_values'][
                     'min_exp_gt_min'])
                 / 2
             )
@@ -173,7 +173,7 @@ class CustomFloPoAnalyzerKeras:
             single_res['exact_values']['min_exp'] = min(df_e['EXP'])
             single_res['exact_values']['max_exp'] = max(df_e['EXP'])
             single_res['exact_values']['exact_bias'] = round(
-                (single_res['exact_values']['max_exp'] - single_res['exact_values']['min_exp']) / 2
+                (single_res['exact_values']['max_exp'] + single_res['exact_values']['min_exp']) / 2
             )
             single_res['exact_values']['min_exponent_bits'] = min_exp_bits_func(single_res['exact_values']['min_exp'],
                                                                                 single_res['exact_values']['max_exp'])

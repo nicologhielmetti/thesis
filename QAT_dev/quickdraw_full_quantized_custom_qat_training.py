@@ -149,11 +149,6 @@ quantizer_dict = \
 model_id = 'quickdraw_full_quantized_custom'
 
 
-class QuantizerEncoder(JSONEncoder):
-    def default(self, o):
-        return o.__dict__.update({'quantizer_name': self.__class__.__name__})
-
-
 with open(model_id + '_quantizer_dict.json', 'w') as json_file:
     json.dump(quantizer_dict, json_file, default=vars, indent=4)
 
