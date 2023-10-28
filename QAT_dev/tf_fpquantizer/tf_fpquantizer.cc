@@ -89,8 +89,8 @@ public:
 					   context->GetAttr("est_bias", &_mask.est_bias));
 		
 		// Check that est_bias is in the fp32 exp range
-		OP_REQUIRES(context, _mask.est_bias > -127 && _mask.est_bias < 128,
-					errors::InvalidArgument("Need est_bias > -127 and < 128, got ",
+		OP_REQUIRES(context, _mask.est_bias >= -127 && _mask.est_bias < 128,
+					errors::InvalidArgument("Need est_bias >= -127 and < 128, got ",
 											_mask.e_bits));
 		OP_REQUIRES_OK(context,
 					   context->GetAttr("use_est_bias", &_mask.use_est_bias));
