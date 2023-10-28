@@ -106,8 +106,12 @@ class CustomFloPoAnalyzerKeras:
         return analysis_data
 
     def _generate_df_mantissa_exponent_analysis(self, min_value_filter_ulp, min_value_filter_exp, ulp_percentiles):
-        def min_exp_bits_func(min_v, max_v):
+        def compute_min_exp_bit(min_v, max_v):
             return int(np.ceil(np.log2(max_v - min_v + 1))) if max_v != min_v else 1
+
+        def compute_bias(n, min_exp, max_exp):
+            # n: min_exp_bits
+            return ((max_exp - 1) + (min_exp + 2 - (2 ** n))) / 2
 
         res = \
             {
@@ -126,19 +130,21 @@ class CustomFloPoAnalyzerKeras:
                         },
                     'statistical_values':
                         {
-                            'min_exp_gt_min': 0,
-                            'max_exp_gt_min': 0,
-                            'bias_gt_min': 0,
-                            'ulp_percentile_values': []
+                            'min_exp': 0,
+                            'max_exp': 0,
+                            'bias': 0,
+                            'min_exp_bit': 0,
+                            'min_ulp': [],
+                            'min_man_bit': []
                         },
                     'exact_values':
                         {
                             'min_exp': 0,
                             'max_exp': 0,
-                            'exact_bias': 0,
-                            'min_exponent_bits': 0,
+                            'bias': 0,
+                            'min_exp_bit': 0,
                             'min_ulp': 0,
-                            'min_mantissa_bit': 0
+                            'min_man_bit': 0
                         }
                 }
             df_u = (
@@ -162,23 +168,25 @@ class CustomFloPoAnalyzerKeras:
             df_e_filtered = df_e[df_e['count'] > df_e['count'].max() * min_value_filter_exp]
             single_res['plot_data']['exps_count'] = df_e
             single_res['plot_data']['exps_count_filtered'] = df_e_filtered
-            single_res['statistical_values']['min_exp_gt_min'] = min(df_e_filtered['EXP'])
-            single_res['statistical_values']['max_exp_gt_min'] = max(df_e_filtered['EXP'])
-            single_res['statistical_values']['bias_gt_min'] = round(
-                (single_res['statistical_values']['max_exp_gt_min'] + single_res['statistical_values'][
-                    'min_exp_gt_min'])
-                / 2
-            )
-            single_res['statistical_values']['ulp_percentile_values'].extend(np.percentile(u['ULP'], ulp_percentiles))
+            single_res['statistical_values']['min_exp'] = min(df_e_filtered['EXP'])
+            single_res['statistical_values']['max_exp'] = max(df_e_filtered['EXP'])
+            single_res['statistical_values']['min_exp_bit'] = compute_min_exp_bit(
+                single_res['statistical_values']['min_exp'], single_res['statistical_values']['max_exp'])
+            single_res['statistical_values']['bias'] = compute_bias(single_res['statistical_values']['min_exp_bit'],
+                                                                    single_res['statistical_values']['min_exp'],
+                                                                    single_res['statistical_values']['max_exp'])
+            single_res['statistical_values']['min_ulp'].extend(np.percentile(u['ULP'], ulp_percentiles))
+            single_res['statistical_values']['min_man_bit'].extend(
+                (np.array([23 - np.ceil(np.log2(single_res['statistical_values']['min_ulp']))], dtype='int')).tolist())
             single_res['exact_values']['min_exp'] = min(df_e['EXP'])
             single_res['exact_values']['max_exp'] = max(df_e['EXP'])
-            single_res['exact_values']['exact_bias'] = round(
-                (single_res['exact_values']['max_exp'] + single_res['exact_values']['min_exp']) / 2
-            )
-            single_res['exact_values']['min_exponent_bits'] = min_exp_bits_func(single_res['exact_values']['min_exp'],
-                                                                                single_res['exact_values']['max_exp'])
+            single_res['exact_values']['min_exp_bit'] = compute_min_exp_bit(single_res['exact_values']['min_exp'],
+                                                                            single_res['exact_values']['max_exp'])
+            single_res['exact_values']['bias'] = compute_bias(single_res['exact_values']['min_exp_bit'],
+                                                              single_res['exact_values']['min_exp'],
+                                                              single_res['exact_values']['max_exp'])
             single_res['exact_values']['min_ulp'] = min(df_u['ULP'])
-            single_res['exact_values']['min_mantissa_bit'] = int(23 - np.ceil(np.log2(min(df_u['ULP']))))
+            single_res['exact_values']['min_man_bit'] = int(23 - np.ceil(np.log2(single_res['exact_values']['min_ulp'])))
             res['layer_data'].update({u['layer_name']: single_res})
         self.analysis_data = res
         return res
