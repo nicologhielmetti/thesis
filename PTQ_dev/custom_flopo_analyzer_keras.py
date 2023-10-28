@@ -111,7 +111,7 @@ class CustomFloPoAnalyzerKeras:
 
         def compute_bias(n, min_exp, max_exp):
             # n: min_exp_bits
-            return ((max_exp - 1) + (min_exp + 2 - (2 ** n))) / 2
+            return int(round(((max_exp - 1) + (min_exp + 2 - (2 ** n))) / 2))
 
         res = \
             {
