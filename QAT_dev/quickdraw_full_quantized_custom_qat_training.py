@@ -72,38 +72,38 @@ del data_activations
 del activation_analyzer
 del weight_analyzer
 
-act_dense_6_bias = activations_analysis['layer_data']['dense_6']['exact_values']['exact_bias']
-act_lstm_1_bias = activations_analysis['layer_data']['lstm_1']['exact_values']['exact_bias']
-act_softmax_bias = activations_analysis['layer_data']['softmax']['exact_values']['exact_bias']
-act_dense_5_bias = activations_analysis['layer_data']['dense_5']['exact_values']['exact_bias']
-act_dense_3_bias = activations_analysis['layer_data']['dense_3']['exact_values']['exact_bias']
+act_dense_6_bias = activations_analysis['layer_data']['dense_6']['exact_values']['bias']
+act_lstm_1_bias = activations_analysis['layer_data']['lstm_1']['exact_values']['bias']
+act_softmax_bias = activations_analysis['layer_data']['softmax']['exact_values']['bias']
+act_dense_5_bias = activations_analysis['layer_data']['dense_5']['exact_values']['bias']
+act_dense_3_bias = activations_analysis['layer_data']['dense_3']['exact_values']['bias']
 
-act_dense_6_exp = activations_analysis['layer_data']['dense_6']['exact_values']['min_exponent_bits']
-act_lstm_1_exp = activations_analysis['layer_data']['lstm_1']['exact_values']['min_exponent_bits']
-act_softmax_exp = activations_analysis['layer_data']['softmax']['exact_values']['min_exponent_bits']
-act_dense_5_exp = activations_analysis['layer_data']['dense_5']['exact_values']['min_exponent_bits']
-act_dense_3_exp = activations_analysis['layer_data']['dense_3']['exact_values']['min_exponent_bits']
+act_dense_6_exp = activations_analysis['layer_data']['dense_6']['exact_values']['min_exp_bit']
+act_lstm_1_exp = activations_analysis['layer_data']['lstm_1']['exact_values']['min_exp_bit']
+act_softmax_exp = activations_analysis['layer_data']['softmax']['exact_values']['min_exp_bit']
+act_dense_5_exp = activations_analysis['layer_data']['dense_5']['exact_values']['min_exp_bit']
+act_dense_3_exp = activations_analysis['layer_data']['dense_3']['exact_values']['min_exp_bit']
 
-act_dense_6_man = min(activations_analysis['layer_data']['dense_6']['exact_values']['min_mantissa_bit'], 4)
-act_lstm_1_man = min(activations_analysis['layer_data']['lstm_1']['exact_values']['min_mantissa_bit'], 4)
-act_softmax_man = min(activations_analysis['layer_data']['softmax']['exact_values']['min_mantissa_bit'], 4)
-act_dense_5_man = min(activations_analysis['layer_data']['dense_5']['exact_values']['min_mantissa_bit'], 4)
-act_dense_3_man = min(activations_analysis['layer_data']['dense_3']['exact_values']['min_mantissa_bit'], 4)
+act_dense_6_man = min(activations_analysis['layer_data']['dense_6']['exact_values']['min_man_bit'], 4)
+act_lstm_1_man = min(activations_analysis['layer_data']['lstm_1']['exact_values']['min_man_bit'], 4)
+act_softmax_man = min(activations_analysis['layer_data']['softmax']['exact_values']['min_man_bit'], 4)
+act_dense_5_man = min(activations_analysis['layer_data']['dense_5']['exact_values']['min_man_bit'], 4)
+act_dense_3_man = min(activations_analysis['layer_data']['dense_3']['exact_values']['min_man_bit'], 4)
 
-wei_dense_6_bias = weight_analysis['layer_data']['dense_6']['exact_values']['exact_bias']
-wei_lstm_1_bias = weight_analysis['layer_data']['lstm_1']['exact_values']['exact_bias']
-wei_dense_5_bias = weight_analysis['layer_data']['dense_5']['exact_values']['exact_bias']
-wei_dense_3_bias = weight_analysis['layer_data']['dense_3']['exact_values']['exact_bias']
+wei_dense_6_bias = weight_analysis['layer_data']['dense_6']['exact_values']['bias']
+wei_lstm_1_bias = weight_analysis['layer_data']['lstm_1']['exact_values']['bias']
+wei_dense_5_bias = weight_analysis['layer_data']['dense_5']['exact_values']['bias']
+wei_dense_3_bias = weight_analysis['layer_data']['dense_3']['exact_values']['bias']
 
-wei_dense_6_exp = weight_analysis['layer_data']['dense_6']['exact_values']['min_exponent_bits']
-wei_lstm_1_exp = weight_analysis['layer_data']['lstm_1']['exact_values']['min_exponent_bits']
-wei_dense_5_exp = weight_analysis['layer_data']['dense_5']['exact_values']['min_exponent_bits']
-wei_dense_3_exp = weight_analysis['layer_data']['dense_3']['exact_values']['min_exponent_bits']
+wei_dense_6_exp = weight_analysis['layer_data']['dense_6']['exact_values']['min_exp_bit']
+wei_lstm_1_exp = weight_analysis['layer_data']['lstm_1']['exact_values']['min_exp_bit']
+wei_dense_5_exp = weight_analysis['layer_data']['dense_5']['exact_values']['min_exp_bit']
+wei_dense_3_exp = weight_analysis['layer_data']['dense_3']['exact_values']['min_exp_bit']
 
-wei_dense_6_man = min(weight_analysis['layer_data']['dense_6']['exact_values']['min_mantissa_bit'], 4)
-wei_lstm_1_man = min(weight_analysis['layer_data']['lstm_1']['exact_values']['min_mantissa_bit'], 4)
-wei_dense_5_man = min(weight_analysis['layer_data']['dense_5']['exact_values']['min_mantissa_bit'], 4)
-wei_dense_3_man = min(weight_analysis['layer_data']['dense_3']['exact_values']['min_mantissa_bit'], 4)
+wei_dense_6_man = min(weight_analysis['layer_data']['dense_6']['exact_values']['min_man_bit'], 4)
+wei_lstm_1_man = min(weight_analysis['layer_data']['lstm_1']['exact_values']['min_man_bit'], 4)
+wei_dense_5_man = min(weight_analysis['layer_data']['dense_5']['exact_values']['min_man_bit'], 4)
+wei_dense_3_man = min(weight_analysis['layer_data']['dense_3']['exact_values']['min_man_bit'], 4)
 
 quantizer_dict = \
     {
