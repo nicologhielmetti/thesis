@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.utils import shuffle
 from tqdm import tqdm
 
-GENERATE_NPY_FILES = False
+GENERATE_NPY_FILES = True
 
 if GENERATE_NPY_FILES:
     ant = np.load('ant.full.npz', allow_pickle=True, encoding='latin1')

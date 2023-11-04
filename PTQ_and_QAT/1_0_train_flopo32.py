@@ -20,21 +20,21 @@ JSONEncoder.default = _default
 
 names = SharedDefinitons('quickdraw')
 
-X_train = np.load('../models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True).astype(np.float32)
-y_train = np.load('../models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True).astype(np.float32)
-X_test = np.load('../models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
-y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
+X_train = np.load('models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True).astype(np.float32)
+y_train = np.load('models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True).astype(np.float32)
+X_test = np.load('models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
+y_test = np.load('models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
 
 model_file_path, model_name = names.get_flopo32_model_names()
 
 model = ModelsAndData.get_quickdraw()
 
 time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-mc = ModelCheckpoint('ckpt_' + model_name + '_' + time_str + '/' + model_name + '_{epoch:02d}_{val_loss:.2f}.h5'
+mc = ModelCheckpoint(model_name + '/checkpoint_' + model_name + '_' + time_str + '/' + model_name + '_{epoch:02d}_{val_loss:.2f}.h5'
                      , verbose=2, monitor='val_loss', mode='min', save_best_only=True)
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=2, patience=5, restore_best_weights=True)
 tb = TensorBoard(
-    log_dir='tensorboard_logs/' + model_name + '_' + time_str,
+    log_dir=model_name + '/tensorboard_logs_' + model_name + '_' + time_str,
     histogram_freq=1,
     write_graph=False,
     write_images=False,

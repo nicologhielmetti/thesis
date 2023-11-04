@@ -6,7 +6,7 @@ import tensorflow.keras.backend as K
 import tensorflow as tf
 import python_bindings11_flopo_quantizer.fpquantizer as fpquantizer
 
-tf_fpquantizer = tf.load_op_library('../quantizers/tensorflow_flopo_quantizer/tf_fpquantizer.so')
+tf_fpquantizer = tf.load_op_library('quantizers/tensorflow_flopo_quantizer/tf_fpquantizer.so')
 
 
 class quantized_float(BaseQuantizer):
