@@ -8,7 +8,7 @@ from tensorflow import keras
 
 sys.path.extend(
     ['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ_dev', '/data1/home/ghielmetti/thesis/QAT_dev',
-     '/data1/home/ghielmetti/thesis/models'])
+     '/data1/home/ghielmetti/thesis/models_and_data'])
 
 from common import Common
 from custom_flopo_analyzer_keras import CustomFloPoAnalyzerKeras
@@ -18,10 +18,10 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from models_and_data import ModelsAndData
 from quantized_float_tf import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
 
-X_train = np.load('../models/quickdraw_dataset/X_train.npy', allow_pickle=True)
-y_train = np.load('../models/quickdraw_dataset/y_train.npy', allow_pickle=True)
-X_test = np.load('../models/quickdraw_dataset/X_test.npy', allow_pickle=True)
-y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
+X_train = np.load('../models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True)
+y_train = np.load('../models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True)
+X_test = np.load('../models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True)
+y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True)
 
 # class EpochCallbacks(keras.callbacks.Callback):
 #     def __init__(self, epoch):
@@ -45,8 +45,8 @@ y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
 
 # epoch = Epoch(0)
 
-keras_model = keras.models.load_model('../models/saved_quickdraw_model/quickdraw_not_quantized.h5')
-ds_len = 1000
+keras_model = keras.models.load_model('../models_and_data/saved_quickdraw_model/quickdraw_not_quantized.h5')
+ds_len = 10
 activations_file_name = keras_model.name + '_' + str(ds_len)
 weights_file_name = keras_model.name
 
@@ -72,72 +72,94 @@ del data_activations
 del activation_analyzer
 del weight_analyzer
 
-act_dense_6_bias = activations_analysis['layer_data']['dense_6']['exact_values']['bias']
-act_lstm_1_bias = activations_analysis['layer_data']['lstm_1']['exact_values']['bias']
-act_softmax_bias = activations_analysis['layer_data']['softmax']['exact_values']['bias']
-act_dense_5_bias = activations_analysis['layer_data']['dense_5']['exact_values']['bias']
-act_dense_3_bias = activations_analysis['layer_data']['dense_3']['exact_values']['bias']
+act_dense_6_bias = activations_analysis['layer_data']['dense_6_activation']['exact_values']['bias']
+act_lstm_1_bias = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['bias']
+state_lstm_1_bias = activations_analysis['layer_data']['lstm_1_state_activation']['exact_values']['bias']
+act_softmax_bias = activations_analysis['layer_data']['softmax_activation']['exact_values']['bias']
+act_dense_5_bias = activations_analysis['layer_data']['dense_5_activation']['exact_values']['bias']
+act_dense_3_bias = activations_analysis['layer_data']['dense_3_activation']['exact_values']['bias']
 
-act_dense_6_exp = activations_analysis['layer_data']['dense_6']['exact_values']['min_exp_bit']
-act_lstm_1_exp = activations_analysis['layer_data']['lstm_1']['exact_values']['min_exp_bit']
-act_softmax_exp = activations_analysis['layer_data']['softmax']['exact_values']['min_exp_bit']
-act_dense_5_exp = activations_analysis['layer_data']['dense_5']['exact_values']['min_exp_bit']
-act_dense_3_exp = activations_analysis['layer_data']['dense_3']['exact_values']['min_exp_bit']
+act_dense_6_exp = activations_analysis['layer_data']['dense_6_activation']['exact_values']['min_exp_bit']
+act_lstm_1_exp = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['min_exp_bit']
+state_lstm_1_exp = activations_analysis['layer_data']['lstm_1_state_activation']['exact_values']['min_exp_bit']
+act_softmax_exp = activations_analysis['layer_data']['softmax_activation']['exact_values']['min_exp_bit']
+act_dense_5_exp = activations_analysis['layer_data']['dense_5_activation']['exact_values']['min_exp_bit']
+act_dense_3_exp = activations_analysis['layer_data']['dense_3_activation']['exact_values']['min_exp_bit']
 
-act_dense_6_man = min(activations_analysis['layer_data']['dense_6']['exact_values']['min_man_bit'], 4)
-act_lstm_1_man = min(activations_analysis['layer_data']['lstm_1']['exact_values']['min_man_bit'], 4)
-act_softmax_man = min(activations_analysis['layer_data']['softmax']['exact_values']['min_man_bit'], 4)
-act_dense_5_man = min(activations_analysis['layer_data']['dense_5']['exact_values']['min_man_bit'], 4)
-act_dense_3_man = min(activations_analysis['layer_data']['dense_3']['exact_values']['min_man_bit'], 4)
+act_dense_6_man = activations_analysis['layer_data']['dense_6_activation']['exact_values']['min_man_bit']
+act_lstm_1_man = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['min_man_bit']
+state_lstm_1_man = activations_analysis['layer_data']['lstm_1_state_activation']['exact_values']['min_man_bit']
+act_softmax_man = activations_analysis['layer_data']['softmax_activation']['exact_values']['min_man_bit']
+act_dense_5_man = activations_analysis['layer_data']['dense_5_activation']['exact_values']['min_man_bit']
+act_dense_3_man = activations_analysis['layer_data']['dense_3_activation']['exact_values']['min_man_bit']
 
-wei_dense_6_bias = weight_analysis['layer_data']['dense_6']['exact_values']['bias']
-wei_lstm_1_bias = weight_analysis['layer_data']['lstm_1']['exact_values']['bias']
-wei_dense_5_bias = weight_analysis['layer_data']['dense_5']['exact_values']['bias']
-wei_dense_3_bias = weight_analysis['layer_data']['dense_3']['exact_values']['bias']
+wei_dense_6_bias = weight_analysis['layer_data']['dense_6_w']['exact_values']['bias']
+wei_lstm_1_bias = weight_analysis['layer_data']['lstm_1_w']['exact_values']['bias']
+rw_lstm_1_bias = weight_analysis['layer_data']['lstm_1_rw']['exact_values']['bias']
+wei_dense_5_bias = weight_analysis['layer_data']['dense_5_w']['exact_values']['bias']
+wei_dense_3_bias = weight_analysis['layer_data']['dense_3_w']['exact_values']['bias']
 
-wei_dense_6_exp = weight_analysis['layer_data']['dense_6']['exact_values']['min_exp_bit']
-wei_lstm_1_exp = weight_analysis['layer_data']['lstm_1']['exact_values']['min_exp_bit']
-wei_dense_5_exp = weight_analysis['layer_data']['dense_5']['exact_values']['min_exp_bit']
-wei_dense_3_exp = weight_analysis['layer_data']['dense_3']['exact_values']['min_exp_bit']
+wei_dense_6_exp = weight_analysis['layer_data']['dense_6_w']['exact_values']['min_exp_bit']
+wei_lstm_1_exp = weight_analysis['layer_data']['lstm_1_w']['exact_values']['min_exp_bit']
+rw_lstm_1_exp = weight_analysis['layer_data']['lstm_1_rw']['exact_values']['min_exp_bit']
+wei_dense_5_exp = weight_analysis['layer_data']['dense_5_w']['exact_values']['min_exp_bit']
+wei_dense_3_exp = weight_analysis['layer_data']['dense_3_w']['exact_values']['min_exp_bit']
 
-wei_dense_6_man = min(weight_analysis['layer_data']['dense_6']['exact_values']['min_man_bit'], 4)
-wei_lstm_1_man = min(weight_analysis['layer_data']['lstm_1']['exact_values']['min_man_bit'], 4)
-wei_dense_5_man = min(weight_analysis['layer_data']['dense_5']['exact_values']['min_man_bit'], 4)
-wei_dense_3_man = min(weight_analysis['layer_data']['dense_3']['exact_values']['min_man_bit'], 4)
+wei_dense_6_man = min(weight_analysis['layer_data']['dense_6_w']['exact_values']['min_man_bit'], 4)
+wei_lstm_1_man = min(weight_analysis['layer_data']['lstm_1_w']['exact_values']['min_man_bit'], 4)
+rw_lstm_1_man = min(weight_analysis['layer_data']['lstm_1_rw']['exact_values']['min_man_bit'], 4)
+wei_dense_5_man = min(weight_analysis['layer_data']['dense_5_w']['exact_values']['min_man_bit'], 4)
+wei_dense_3_man = min(weight_analysis['layer_data']['dense_3_w']['exact_values']['min_man_bit'], 4)
+
+b_dense_6_bias = weight_analysis['layer_data']['dense_6_b']['exact_values']['bias']
+b_lstm_1_bias = weight_analysis['layer_data']['lstm_1_b']['exact_values']['bias']
+b_dense_5_bias = weight_analysis['layer_data']['dense_5_b']['exact_values']['bias']
+b_dense_3_bias = weight_analysis['layer_data']['dense_3_b']['exact_values']['bias']
+
+b_dense_6_exp = weight_analysis['layer_data']['dense_6_b']['exact_values']['min_exp_bit']
+b_lstm_1_exp = weight_analysis['layer_data']['lstm_1_b']['exact_values']['min_exp_bit']
+b_dense_5_exp = weight_analysis['layer_data']['dense_5_b']['exact_values']['min_exp_bit']
+b_dense_3_exp = weight_analysis['layer_data']['dense_3_b']['exact_values']['min_exp_bit']
+
+b_dense_6_man = min(weight_analysis['layer_data']['dense_6_b']['exact_values']['min_man_bit'], 4)
+b_lstm_1_man = min(weight_analysis['layer_data']['lstm_1_b']['exact_values']['min_man_bit'], 4)
+b_dense_5_man = min(weight_analysis['layer_data']['dense_5_b']['exact_values']['min_man_bit'], 4)
+b_dense_3_man = min(weight_analysis['layer_data']['dense_3_b']['exact_values']['min_man_bit'], 4)
+
 
 quantizer_dict = \
     {
         'quantized_input':
             {
-                'activation': quantized_float(4, 4)
+                'activation': quantized_float(12, 0)
             },
         'lstm_1':
             {
                 'activation': quantized_float_tanh(act_lstm_1_exp, act_lstm_1_man, act_lstm_1_bias, use_est_bias=1),
-                'recurrent_activation': quantized_float_sigmoid(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias,
+                'recurrent_activation': quantized_float_sigmoid(state_lstm_1_exp, state_lstm_1_man, state_lstm_1_bias,
                                                                 use_est_bias=1),
                 'kernel_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias, use_est_bias=1),
-                'recurrent_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias, use_est_bias=1),
-                'bias_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias, use_est_bias=1),
-                'state_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_bias, use_est_bias=1)
+                'recurrent_quantizer': quantized_float(rw_lstm_1_exp, rw_lstm_1_man, rw_lstm_1_bias, use_est_bias=1),
+                'bias_quantizer': quantized_float(b_lstm_1_exp, b_lstm_1_man, b_lstm_1_bias, use_est_bias=1),
+                'state_quantizer': quantized_float(state_lstm_1_exp, state_lstm_1_man, state_lstm_1_bias, use_est_bias=1)
             },
         'dense_3':
             {
                 'activation': quantized_float(act_dense_3_exp, act_dense_3_man, act_dense_3_bias, use_est_bias=1),
                 'kernel_quantizer': quantized_float(wei_dense_3_exp, wei_dense_3_man, wei_dense_3_bias, use_est_bias=1),
-                'bias_quantizer': quantized_float(wei_dense_3_exp, wei_dense_3_man, wei_dense_3_bias, use_est_bias=1)
+                'bias_quantizer': quantized_float(b_dense_3_exp, b_dense_3_man, b_dense_3_bias, use_est_bias=1)
             },
         'dense_5':
             {
                 'activation': quantized_float(act_dense_5_exp, act_dense_5_man, act_dense_5_bias, use_est_bias=1),
                 'kernel_quantizer': quantized_float(wei_dense_5_exp, wei_dense_5_man, wei_dense_5_bias, use_est_bias=1),
-                'bias_quantizer': quantized_float(wei_dense_5_exp, wei_dense_5_man, wei_dense_5_bias, use_est_bias=1)
+                'bias_quantizer': quantized_float(b_dense_5_exp, b_dense_5_man, b_dense_5_bias, use_est_bias=1)
             },
         'dense_6':
             {
                 'activation': quantized_float(act_dense_6_exp, act_dense_6_man, act_dense_6_bias, use_est_bias=1),
                 'kernel_quantizer': quantized_float(wei_dense_6_exp, wei_dense_6_man, wei_dense_6_bias, use_est_bias=1),
-                'bias_quantizer': quantized_float(wei_dense_6_exp, wei_dense_6_man, wei_dense_6_bias, use_est_bias=1)
+                'bias_quantizer': quantized_float(b_dense_6_exp, b_dense_6_man, b_dense_6_bias, use_est_bias=1)
             },
         'softmax':
             {

@@ -1,23 +1,19 @@
+import sys
+sys.path.extend(
+    ['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ_dev', '/data1/home/ghielmetti/thesis/QAT_dev',
+     '/data1/home/ghielmetti/thesis/models_and_data', '/home/nicolo/thesis/QAT_dev', '/home/nicolo/thesis/models_and_data',
+     '/home/nicolo/thesis/PTQ_dev'])
 from tensorflow import keras
 from custom_flopo_analyzer_keras import CustomFloPoAnalyzerKeras
 import numpy as np
 from common import Common
 from functools import partial
+from models_and_data import ModelsAndData
 
-from models_and_data.models import Models
-
-# input_5 None
-# lstm_4 <function tanh at 0x7ffb2cbf55e0>
-# dropout_8 None
-# dense_8 <function linear at 0x7ffb2cbf5ca0>
-# dropout_9 None
-# dense_9 <function linear at 0x7ffb2cbf5ca0>
-# rnn_densef <function softmax at 0x7ffb2cbee820>
-
-model = keras.models.load_model('../../models/saved_quickdraw_model/Quickdraw5ClassLSTMFinL.h5')
+model = keras.models.load_model('../../models_and_data/saved_quickdraw_model/Quickdraw5ClassLSTMFinL.h5')
 model._name = 'quickdraw_original'
-X_test = np.load('../data/quickdraw-dataset/X_test_format.npy')
-y_test = np.load('../data/quickdraw-dataset/y_test_format.npy')
+X_test = np.load('../data/quickdraw_dataset/X_test_format.npy')
+y_test = np.load('../data/quickdraw_dataset/y_test_format.npy')
 
 ds_len = 1000
 activations_file_name = model.name + '-' + str(ds_len)
@@ -42,7 +38,7 @@ weights_file_name = model.name
 ######################################
 
 model_fixed = Models.get_quickdraw()
-model_fixed.load_weights('../../models/saved_quickdraw_model/Quickdraw5ClassLSTMFinL.h5')
+model_fixed.load_weights('../../models_and_data/saved_quickdraw_model/Quickdraw5ClassLSTMFinL.h5')
 model_fixed.predict()
 
 activations_file_name_fix = model_fixed.name + '-' + str(ds_len)

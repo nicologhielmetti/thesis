@@ -17,22 +17,30 @@ from matplotlib import rc
 
 
 class CustomFloPoAnalyzerKeras:
-    def __init__(self, model, file_name_id, get_data_func, string_id):
+    def __init__(self, model, file_name_id, get_data_func, string_id, min_value_filter_ulp=0.01,
+                 min_value_filter_exp=0.01, ulp_percentiles=None):
+        if ulp_percentiles is None:
+            self.ulp_percentiles = [35, 40, 50, 60, 70]
+        self.min_value_filter_ulp = min_value_filter_ulp
+        self.min_value_filter_exp = min_value_filter_exp
+        self.ulp_percentiles = ulp_percentiles
         self.model = model
         self.file_name_id = file_name_id
         self.ulp_data = []
         self.exp_data = []
         self.string_id = string_id
         self.analysis_data = {}
-        ulp_file_path = 'profiling_data/ULP' + '_' + self.string_id + '_' + file_name_id + '.pkl'
-        exp_file_path = 'profiling_data/EXP' + '_' + self.string_id + '_' + file_name_id + '.pkl'
+        self.weights_or_activations = 'activation_name' if string_id == 'activations' else 'weight_name' \
+            if string_id == 'weights' else ''
+        ulp_file_path = 'profiling_data_' + model.name + '/ULP' + '_' + self.string_id + '_' + file_name_id + '.pkl'
+        exp_file_path = 'profiling_data_' + model.name + '/EXP' + '_' + self.string_id + '_' + file_name_id + '.pkl'
         if not os.path.isfile(ulp_file_path) or not os.path.isfile(exp_file_path):
             united_data = get_data_func()
-            data_gb = united_data.groupby('layer_name')
+            data_gb = united_data.groupby(['layer_name', self.weights_or_activations])
             self.splitted_data = [data_gb.get_group(x) for x in data_gb.groups]
 
     def _analysis(self, data, compute_function, profile_timing, computation_id):
-        file_path = 'profiling_data/' + computation_id + '_' + self.string_id + '_' + self.file_name_id + '.pkl'
+        file_path = 'profiling_data_' + self.model.name + '/' + computation_id + '_' + self.string_id + '_' + self.file_name_id + '.pkl'
         if self.file_name_id is not None and os.path.isfile(file_path):
             with open(file_path, 'rb') as f:
                 data.extend(pickle.load(f))
@@ -47,9 +55,12 @@ class CustomFloPoAnalyzerKeras:
             ts = time.time()
         for layer_data in self.splitted_data:
             thread = threading.Thread(target=
-                                      lambda chunk, name: _queue.put({computation_id: compute_function(chunk),
-                                                                      'layer_name': name}),
-                                      args=(layer_data['values'].tolist(), layer_data['layer_name'].unique()[0]))
+                                      lambda chunk, layer_name, act_name: _queue.put(
+                                          {computation_id: compute_function(chunk),
+                                           'layer_name': layer_name,
+                                           self.weights_or_activations: act_name}),
+                                      args=(layer_data['values'].tolist(), layer_data['layer_name'].unique()[0],
+                                            layer_data[self.weights_or_activations].unique()[0]))
             threads.append(thread)
             thread.start()
 
@@ -62,8 +73,8 @@ class CustomFloPoAnalyzerKeras:
 
         data.extend(list(_queue.queue))
         if self.file_name_id is not None:
-            if not os.path.exists('profiling_data'):
-                os.makedirs('profiling_data')
+            if not os.path.exists('profiling_data_' + self.model.name + '/'):
+                os.makedirs('profiling_data_' + self.model.name + '/')
             with open(file_path, 'wb') as f:
                 pickle.dump(data, f)
         return data
@@ -91,11 +102,14 @@ class CustomFloPoAnalyzerKeras:
         else:
             return None
 
-    def mantissa_exponent_analysis(self, min_value_filter_ulp=0.01, min_value_filter_exp=0.01, ulp_percentiles=None):
-        if ulp_percentiles is None:
-            ulp_percentiles = [35, 40, 50, 60, 70]
+    def read_analysis(self, path):
+        with open(path, 'r') as f:
+            self.analysis_data = json.load(f)
+
+    def mantissa_exponent_analysis(self):
         if not self.analysis_data:
-            self._generate_df_mantissa_exponent_analysis(min_value_filter_ulp, min_value_filter_exp, ulp_percentiles)
+            self._generate_df_mantissa_exponent_analysis(self.min_value_filter_ulp, self.min_value_filter_exp, 
+                                                         self.ulp_percentiles)
         analysis_data = copy.deepcopy(self.analysis_data)
         for _, v in analysis_data['layer_data'].items():
             v.pop('plot_data')
@@ -109,9 +123,10 @@ class CustomFloPoAnalyzerKeras:
         def compute_min_exp_bit(min_v, max_v):
             return int(np.ceil(np.log2(max_v - min_v + 1))) if max_v != min_v else 1
 
-        def compute_bias(n, min_exp, max_exp):
+        def compute_exp_offset(n, min_exp, max_exp):
             # n: min_exp_bits
-            return int(round(((max_exp - 1) + (min_exp + 2 - (2 ** n))) / 2))
+            return np.clip(int(round(((max_exp - 1) + (min_exp + 2 - (2 ** n))) / 2)),
+                           a_min=(-126+n-1), a_max=(126-(n-1)))
 
         res = \
             {
@@ -132,7 +147,7 @@ class CustomFloPoAnalyzerKeras:
                         {
                             'min_exp': 0,
                             'max_exp': 0,
-                            'bias': 0,
+                            'exponent_offset': 0,
                             'min_exp_bit': 0,
                             'min_ulp': [],
                             'min_man_bit': []
@@ -141,7 +156,7 @@ class CustomFloPoAnalyzerKeras:
                         {
                             'min_exp': 0,
                             'max_exp': 0,
-                            'bias': 0,
+                            'exponent_offset': 0,
                             'min_exp_bit': 0,
                             'min_ulp': 0,
                             'min_man_bit': 0
@@ -152,7 +167,7 @@ class CustomFloPoAnalyzerKeras:
                 value_counts(sort=False).
                 reset_index().
                 rename(columns={2: 'count'}).
-                drop(columns=['layer_name'])
+                drop(columns=['layer_name', self.weights_or_activations])
             )
             df_u['count_sum_%'] = df_u['count'].cumsum() / len(u['ULP']) * 100
             single_res['plot_data']['ulps_count'] = df_u
@@ -163,7 +178,7 @@ class CustomFloPoAnalyzerKeras:
                 value_counts(sort=False).
                 reset_index().
                 rename(columns={2: 'count'}).
-                drop(columns=['layer_name'])
+                drop(columns=['layer_name', self.weights_or_activations])
             )
             df_e_filtered = df_e[df_e['count'] > df_e['count'].max() * min_value_filter_exp]
             single_res['plot_data']['exps_count'] = df_e
@@ -172,22 +187,26 @@ class CustomFloPoAnalyzerKeras:
             single_res['statistical_values']['max_exp'] = max(df_e_filtered['EXP'])
             single_res['statistical_values']['min_exp_bit'] = compute_min_exp_bit(
                 single_res['statistical_values']['min_exp'], single_res['statistical_values']['max_exp'])
-            single_res['statistical_values']['bias'] = compute_bias(single_res['statistical_values']['min_exp_bit'],
+            single_res['statistical_values']['exp_offset'] = compute_exp_offset(single_res['statistical_values']['min_exp_bit'],
                                                                     single_res['statistical_values']['min_exp'],
                                                                     single_res['statistical_values']['max_exp'])
             single_res['statistical_values']['min_ulp'].extend(np.percentile(u['ULP'], ulp_percentiles))
             single_res['statistical_values']['min_man_bit'].extend(
-                (np.array([23 - np.ceil(np.log2(single_res['statistical_values']['min_ulp']))], dtype='int')).tolist())
+                (np.array(23 - np.ceil(np.log2(single_res['statistical_values']['min_ulp'])), dtype='int')).tolist())
             single_res['exact_values']['min_exp'] = min(df_e['EXP'])
             single_res['exact_values']['max_exp'] = max(df_e['EXP'])
             single_res['exact_values']['min_exp_bit'] = compute_min_exp_bit(single_res['exact_values']['min_exp'],
                                                                             single_res['exact_values']['max_exp'])
-            single_res['exact_values']['bias'] = compute_bias(single_res['exact_values']['min_exp_bit'],
+            single_res['exact_values']['exp_offset'] = compute_exp_offset(single_res['exact_values']['min_exp_bit'],
                                                               single_res['exact_values']['min_exp'],
                                                               single_res['exact_values']['max_exp'])
             single_res['exact_values']['min_ulp'] = min(df_u['ULP'])
-            single_res['exact_values']['min_man_bit'] = int(23 - np.ceil(np.log2(single_res['exact_values']['min_ulp'])))
-            res['layer_data'].update({u['layer_name']: single_res})
+            single_res['exact_values']['min_man_bit'] = int(
+                23 - np.ceil(np.log2(single_res['exact_values']['min_ulp'])))
+            if self.string_id == 'activations':
+                res['layer_data'].update({u['layer_name'] + '_' + u[self.weights_or_activations]: single_res})
+            else:
+                res['layer_data'].update({u[self.weights_or_activations]: single_res})
         self.analysis_data = res
         return res
 
@@ -210,7 +229,7 @@ class CustomFloPoAnalyzerKeras:
                 )
                 if not os.path.exists(self.model.name + '_plots/'):
                     os.makedirs(self.model.name + '_plots/')
-                plt.savefig(self.model.name + '_plots/' + self.string_id + '_' + k + '_ulp.png', dpi=500)
+                plt.savefig(self.model.name + '_plots/' + k + '_ulp.png', dpi=500)
                 plt.close(fig)
             if plot_cumulative:
                 fig, ax = plt.subplots(figsize=(16, 9))
@@ -225,7 +244,7 @@ class CustomFloPoAnalyzerKeras:
 
                 # Add vertical lines at the specified percentiles
                 for percentile, value, color in zip(self.analysis_data['ulp_percentiles'],
-                                                    d['statistical_values']['ulp_percentile_values'], colors):
+                                                    d['statistical_values']['min_ulp'], colors):
                     # Find the closest data point below the percentile value
                     closest_index = np.argmin(np.abs(d['plot_data']['ulps_count']['ULP'] - value))
                     closest_ulp = d['plot_data']['ulps_count']['ULP'].iloc[closest_index]
@@ -240,7 +259,7 @@ class CustomFloPoAnalyzerKeras:
                 ax.legend()
                 if not os.path.exists(self.model.name + '_plots/'):
                     os.makedirs(self.model.name + '_plots/')
-                plt.savefig(self.model.name + '_plots/' + self.string_id + '_' + k + '_ulp_cdf.png',
+                plt.savefig(self.model.name + '_plots/' + k + '_ulp_cdf.png',
                             dpi=500)
                 plt.close(fig)
 
@@ -254,17 +273,14 @@ class CustomFloPoAnalyzerKeras:
             p.set_ylabel('Number of occurrences [pure number]')
             if not os.path.exists(self.model.name + '_plots/'):
                 os.makedirs(self.model.name + '_plots/')
-            plt.savefig(self.model.name + '_plots/' + self.string_id + '_' + k + '_exp.png', dpi=500)
+            plt.savefig(self.model.name + '_plots/' + k + '_exp.png', dpi=500)
             plt.close(fig)
 
-    def make_plots(self, ulp=True, exp=True, cumulative=True, ulp_percentiles=None, colors=None,
-                   min_value_filter_ulp=0.01, min_value_filter_exp=0.01):
+    def make_plots(self, ulp=True, exp=True, cumulative=True, colors=None):
         if colors is None:
             colors = ['red', 'green', 'orange', 'purple', 'black']
-        if ulp_percentiles is None:
-            ulp_percentiles = [35, 40, 50, 60, 70]
         if not self.analysis_data:
-            self._generate_df_mantissa_exponent_analysis(min_value_filter_ulp, min_value_filter_exp, ulp_percentiles)
+            self._generate_df_mantissa_exponent_analysis(self.min_value_filter_ulp, self.min_value_filter_exp, self.ulp_percentiles)
 
         sns.set_style('whitegrid')
 

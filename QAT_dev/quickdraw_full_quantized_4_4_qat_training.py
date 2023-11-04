@@ -2,20 +2,25 @@ import json
 import sys
 from datetime import datetime
 from json import JSONEncoder
+def _default(self, obj):
+    return getattr(obj.__class__, "to_json", _default.default)(obj)
 
+
+_default.default = JSONEncoder().default
+JSONEncoder.default = _default
 sys.path.extend(
     ['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ_dev', '/data1/home/ghielmetti/thesis/QAT_dev',
-     '/data1/home/ghielmetti/thesis/models'])
+     '/data1/home/ghielmetti/thesis/models_and_data'])
 
 import numpy as np
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from models_and_data import ModelsAndData
 from quantized_float_tf import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
 
-X_train = np.load('../models/quickdraw_dataset/X_train.npy', allow_pickle=True)
-y_train = np.load('../models/quickdraw_dataset/y_train.npy', allow_pickle=True)
-X_test = np.load('../models/quickdraw_dataset/X_test.npy', allow_pickle=True)
-y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
+X_train = np.load('../models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True).astype(np.float32)
+y_train = np.load('../models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True).astype(np.float32)
+X_test = np.load('../models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
+y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
 
 # class EpochCallbacks(keras.callbacks.Callback):
 #     def __init__(self, epoch):
@@ -27,14 +32,14 @@ y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
 
 quantizer_dict = \
     {
-        'quantized_input':
+        'input_linear':
             {
-                'activation': quantized_float(4, 4)
+                'activation_quantizer': quantized_float(4, 4)
             },
         'lstm_1':
             {
-                'activation': quantized_float_tanh(4, 4),
-                'recurrent_activation': quantized_float_sigmoid(4, 4),
+                'activation_quantizer': quantized_float_tanh(4, 4),
+                'recurrent_activation_quantizer': quantized_float_sigmoid(4, 4),
                 'kernel_quantizer': quantized_float(4, 4),
                 'recurrent_quantizer': quantized_float(4, 4),
                 'bias_quantizer': quantized_float(4, 4),
@@ -42,43 +47,34 @@ quantizer_dict = \
             },
         'dense_3':
             {
-                'activation': quantized_float(4, 4),
+                'activation_quantizer': quantized_float(4, 4),
                 'kernel_quantizer': quantized_float(4, 4),
                 'bias_quantizer': quantized_float(4, 4)
             },
         'dense_5':
             {
-                'activation': quantized_float(4, 4),
+                'activation_quantizer': quantized_float(4, 4),
                 'kernel_quantizer': quantized_float(4, 4),
                 'bias_quantizer': quantized_float(4, 4)
             },
         'dense_6':
             {
-                'activation': quantized_float(4, 4),
+                'activation_quantizer': quantized_float(4, 4),
                 'kernel_quantizer': quantized_float(4, 4),
                 'bias_quantizer': quantized_float(4, 4)
             },
         'softmax':
             {
-                'activation': quantized_float_softmax(4, 4)
+                'activation_quantizer': quantized_float_softmax(4, 4)
             }
     }
-quickdraw_quantized = ModelsAndData.get_quickdraw_quantized_all_quantized(quantizer_dict=quantizer_dict)
-
-
-class QuantizerEncoder(JSONEncoder):
-    def default(self, o):
-        try:
-            r = o.__dict__
-        except:
-            r = ''
-        return r
+quickdraw_quantized = ModelsAndData.get_quickdraw_quantized(quantizer_dict=quantizer_dict)
 
 
 model_id = 'quickdraw_full_quantized_4_4'
 
 with open(model_id + '_quantizer_dict.json', 'w') as json_file:
-    json.dump(quantizer_dict, json_file, cls=QuantizerEncoder, indent=4)
+    json.dump(quantizer_dict, json_file, indent=4)
 
 time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
 # ec = EpochCallbacks(epoch)

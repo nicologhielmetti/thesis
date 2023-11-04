@@ -1,16 +1,16 @@
 import json
 from datetime import datetime
 import sys
-sys.path.extend(['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ_dev', '/data1/home/ghielmetti/thesis/QAT_dev', '/data1/home/ghielmetti/thesis/models'])
+sys.path.extend(['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ_dev', '/data1/home/ghielmetti/thesis/QAT_dev', '/data1/home/ghielmetti/thesis/models_and_data'])
 
 import numpy as np
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from models_and_data import ModelsAndData
 
-X_train = np.load('../models/quickdraw_dataset/X_train.npy', allow_pickle=True)
-y_train = np.load('../models/quickdraw_dataset/y_train.npy', allow_pickle=True)
-X_test = np.load('../models/quickdraw_dataset/X_test.npy', allow_pickle=True)
-y_test = np.load('../models/quickdraw_dataset/y_test.npy', allow_pickle=True)
+X_train = np.load('../models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True)
+y_train = np.load('../models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True)
+X_test = np.load('../models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True)
+y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True)
 
 quickdraw_quantized = ModelsAndData.get_quickdraw()
 model_id = 'quickdraw_not_quantized'
