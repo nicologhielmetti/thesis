@@ -48,7 +48,7 @@ history = model.fit(X_train, y_train, batch_size=512, epochs=50,
 
 test_perf = model.evaluate(x=X_test, y=y_test, verbose=1, workers=12, use_multiprocessing=True,
                            return_dict=True, callbacks=[mc, es, tb])
-with open('saved_models/' + model_name + '_test_performance.json',
+with open(model_name + '/' + model_name + '_test_performance.json',
           'w') as json_file:
     json.dump(test_perf, json_file)
 

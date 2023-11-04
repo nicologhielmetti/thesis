@@ -43,8 +43,9 @@ quantized_model = qkeras.utils.model_quantize(model, names.get_config_4_4(), 0, 
                                               False)
 
 time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-mc = ModelCheckpoint(model_name + '/checkpoint_' + model_name + '_' + time_str + '/' + model_name + '_{epoch:02d}_{val_loss:.2f}.h5'
-                     , verbose=2, monitor='val_loss', mode='min', save_best_only=True)
+mc = ModelCheckpoint(
+    model_name + '/checkpoint_' + model_name + '_' + time_str + '/' + model_name + '_{epoch:02d}_{val_loss:.2f}.h5'
+    , verbose=2, monitor='val_loss', mode='min', save_best_only=True)
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=2, patience=5, restore_best_weights=True)
 tb = TensorBoard(
     log_dir=model_name + '/tensorboard_logs_' + model_name + '_' + time_str,
@@ -60,8 +61,8 @@ history = quantized_model.fit(X_train, y_train, batch_size=512, epochs=50,
                               use_multiprocessing=True, workers=12)
 
 test_perf = quantized_model.evaluate(x=X_test, y=y_test, verbose=1, workers=12, use_multiprocessing=True,
-                           return_dict=True, callbacks=[mc, es, tb])
-with open('saved_models/' + model_name + '_test_performance.json',
+                                     return_dict=True, callbacks=[mc, es, tb])
+with open(model_name + '/' + model_name + '_test_performance.json',
           'w') as json_file:
     json.dump(test_perf, json_file)
 

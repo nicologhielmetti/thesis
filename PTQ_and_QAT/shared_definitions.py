@@ -6,8 +6,6 @@ from quantized_float import quantized_float, quantized_float_tanh, quantized_flo
 class SharedDefinitons:
     def __init__(self, base_name):
         self.base_name = base_name
-        if not os.path.exists('saved_models'):
-            os.makedirs('saved_models')
 
     def get_activation_and_weight_file_names(self):
         pass
@@ -23,21 +21,21 @@ class SharedDefinitons:
             self.base_name = self.base_name + '_homo_e' + str(exp) + '_m' + str(man) + '_o' + str(exp_offset)
         if not os.path.exists(self.base_name):
             os.makedirs(self.base_name)
-        return 'saved_models/' + self.base_name + '.h5', self.base_name
+        return self.base_name + '/' + self.base_name + '.h5', self.base_name
 
     def get_hetero_quantized_model_names(self, tag):
         if len(self.base_name.split('_')) == 1:
             self.base_name = self.base_name + '_hetero_' + tag
         if not os.path.exists(self.base_name):
             os.makedirs(self.base_name)
-        return 'saved_models/' + self.base_name + '.h5', self.base_name
+        return self.base_name + '/' + self.base_name + '.h5', self.base_name
 
     def get_flopo32_model_names(self):
         if len(self.base_name.split('_')) == 1:
             self.base_name = self.base_name + '_flopo32'
         if not os.path.exists(self.base_name):
             os.makedirs(self.base_name)
-        return 'saved_models/' + self.base_name + '.h5', self.base_name
+        return self.base_name + '/' + self.base_name + '.h5', self.base_name
 
     def get_config_4_4(self):
         return \
