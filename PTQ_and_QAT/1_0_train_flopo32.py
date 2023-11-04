@@ -27,10 +27,7 @@ y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle
 
 model_file_path, model_name = names.get_flopo32_model_names()
 
-if os.path.exists(model_file_path):
-    model = keras.models.load_model(model_file_path)
-else:
-    model = ModelsAndData.get_quickdraw()
+model = ModelsAndData.get_quickdraw()
 
 time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
 mc = ModelCheckpoint('ckpt_' + model_name + '_' + time_str + '/' + model_name + '_{epoch:02d}_{val_loss:.2f}.h5'
