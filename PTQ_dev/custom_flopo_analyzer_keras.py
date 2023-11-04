@@ -18,7 +18,7 @@ from matplotlib import rc
 
 class CustomFloPoAnalyzerKeras:
     def __init__(self, model, file_name_id, get_data_func, string_id, min_value_filter_ulp=0.01,
-                 min_value_filter_exp=0.01, ulp_percentiles=None):
+                 min_value_filter_exp=0.01, ulp_percentiles=None, ds_len=None):
         if ulp_percentiles is None:
             self.ulp_percentiles = [35, 40, 50, 60, 70]
         self.min_value_filter_ulp = min_value_filter_ulp
@@ -32,8 +32,10 @@ class CustomFloPoAnalyzerKeras:
         self.analysis_data = {}
         self.weights_or_activations = 'activation_name' if string_id == 'activations' else 'weight_name' \
             if string_id == 'weights' else ''
-        ulp_file_path = file_name_id + '/PTQ_analysis/ulp' + '_' + self.string_id + '_' + file_name_id + '.pkl'
-        exp_file_path = file_name_id + '/PTQ_analysis/exp' + '_' + self.string_id + '_' + file_name_id + '.pkl'
+        ulp_file_path = file_name_id + '/PTQ_analysis/ulp' + '_' + string_id + '_' + ds_len + '_' \
+            if ds_len is not None else '' + file_name_id + '.pkl'
+        exp_file_path = file_name_id + '/PTQ_analysis/exp' + '_' + string_id + '_' + ds_len + '_' \
+            if ds_len is not None else '' + file_name_id + '.pkl'
         if not os.path.isfile(ulp_file_path) or not os.path.isfile(exp_file_path):
             united_data = get_data_func()
             data_gb = united_data.groupby(['layer_name', self.weights_or_activations])

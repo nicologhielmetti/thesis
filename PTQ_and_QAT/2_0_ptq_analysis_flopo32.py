@@ -18,15 +18,12 @@ except:
     print('file: ' + model_file_path + ' does not exist')
     sys.exit(1)
 
-X_test = np.load('../models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
-y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
+X_test = np.load('models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
+y_test = np.load('models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
 
 ds_len = 1000
 
-activations_file_name = model_name + '_' + str(ds_len)
-weights_file_name = model_name
-
-activation_analyzer_fixed = CustomFloPoAnalyzerKeras(model, activations_file_name,
+activation_analyzer_fixed = CustomFloPoAnalyzerKeras(model, model_name,
                                                      partial(Common.get_activations_keras, model,
                                                              X_test[:ds_len]),
                                                      'activations',

@@ -1,11 +1,12 @@
 import json
-import os
+import pickle
 from datetime import datetime
 from json import JSONEncoder
 
-import keras.models
+from matplotlib import rc
 import numpy as np
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from matplotlib import pyplot as plt
 
 from shared_definitions import SharedDefinitons
 from models_and_data import ModelsAndData
@@ -17,6 +18,7 @@ def _default(self, obj):
 
 _default.default = JSONEncoder().default
 JSONEncoder.default = _default
+
 
 names = SharedDefinitons('quickdraw')
 
@@ -30,8 +32,9 @@ model_file_path, model_name = names.get_flopo32_model_names()
 model = ModelsAndData.get_quickdraw()
 
 time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-mc = ModelCheckpoint(model_name + '/checkpoint_' + model_name + '_' + time_str + '/' + model_name + '_{epoch:02d}_{val_loss:.2f}.h5'
-                     , verbose=2, monitor='val_loss', mode='min', save_best_only=True)
+mc = ModelCheckpoint(
+    model_name + '/checkpoint_' + model_name + '_' + time_str + '/' + model_name + '_{epoch:02d}_{val_loss:.2f}.h5'
+    , verbose=2, monitor='val_loss', mode='min', save_best_only=True)
 es = EarlyStopping(monitor='val_loss', mode='min', verbose=2, patience=5, restore_best_weights=True)
 tb = TensorBoard(
     log_dir=model_name + '/tensorboard_logs_' + model_name + '_' + time_str,
@@ -45,6 +48,21 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 history = model.fit(X_train, y_train, batch_size=512, epochs=50,
                     validation_split=0.2, shuffle=True, callbacks=[mc, es, tb],
                     use_multiprocessing=True, workers=12)
+
+with open(model_name + '/' + model_name + '_train_val_loss_history.pkl', 'wb') as file_pi:
+    pickle.dump(history.history, file_pi)
+
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+rc('text', usetex=True)
+plt.figure(figsize=(16, 9))
+plt.plot(history.history['loss'], linewidth=1)
+plt.plot(history.history['val_loss'], linewidth=1)
+plt.title('Model Loss over Epochs for model: ' + model_name)
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Training Sample Loss', 'Validation Sample Loss'])
+plt.savefig(model_name + '_train_val_loss_plot.pdf', dpi=500)
+plt.close()
 
 test_perf = model.evaluate(x=X_test, y=y_test, verbose=1, workers=12, use_multiprocessing=True,
                            return_dict=True, callbacks=[mc, es, tb])
