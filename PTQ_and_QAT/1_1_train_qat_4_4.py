@@ -8,7 +8,7 @@ import numpy as np
 import qkeras.utils
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 
-from quantized_float_tf import quantized_float, quantized_float_softmax, quantized_float_sigmoid, quantized_float_tanh
+from quantized_float import quantized_float, quantized_float_softmax, quantized_float_sigmoid, quantized_float_tanh
 from shared_definitions import SharedDefinitons
 from models_and_data import ModelsAndData
 

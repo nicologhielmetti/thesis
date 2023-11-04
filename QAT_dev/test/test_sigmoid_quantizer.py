@@ -4,7 +4,7 @@ import tensorflow
 from qkeras import QActivation
 from tensorflow.python.framework.ops import disable_eager_execution
 
-from quantized_float_tf import quantized_float_sigmoid
+from quantized_float import quantized_float_sigmoid
 
 x = np.random.normal(0, 5, 1_000_000).astype(np.float32)
 

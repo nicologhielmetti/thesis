@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-from quantized_float_tf import quantized_float_tanh
+from quantized_float import quantized_float_tanh
 
 x = np.random.normal(0, 1000, 1_000_000).astype(np.float32)
 

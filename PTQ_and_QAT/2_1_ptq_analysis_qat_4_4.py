@@ -1,6 +1,8 @@
-import os
 import sys
 from functools import partial
+sys.path.extend(
+    ['/data1/home/ghielmetti/thesis', '/data1/home/ghielmetti/thesis/PTQ_dev', '/data1/home/ghielmetti/thesis/QAT_dev',
+     '/data1/home/ghielmetti/thesis/models_and_data'])
 
 import numpy as np
 from tensorflow import keras

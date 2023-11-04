@@ -1,4 +1,4 @@
-from quantized_float_tf import quantized_float
+from quantized_float import quantized_float
 import tensorflow as tf
 
 from models_and_data import ModelsAndData

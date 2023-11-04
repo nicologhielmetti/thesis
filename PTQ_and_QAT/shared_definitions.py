@@ -1,6 +1,6 @@
 import os
 
-from quantized_float_tf import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
+from quantized_float import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
 
 
 class SharedDefinitons:

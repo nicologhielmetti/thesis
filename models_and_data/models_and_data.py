@@ -3,7 +3,7 @@ from tensorflow.keras.layers import Input, LSTM, Dropout, Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.initializers import GlorotUniform, Orthogonal, Zeros, LecunUniform, RandomUniform
 from qkeras import QDense, QActivation, QLSTM
-from quantized_float_tf import quantized_float
+from quantized_float import quantized_float
 
 
 class ModelsAndData:
