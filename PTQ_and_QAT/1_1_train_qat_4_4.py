@@ -10,7 +10,6 @@ import qkeras.utils
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from matplotlib import rc, pyplot as plt
 
-from quantized_float import quantized_float, quantized_float_softmax, quantized_float_sigmoid, quantized_float_tanh
 from shared_definitions import SharedDefinitons
 from models_and_data import ModelsAndData
 
@@ -32,14 +31,6 @@ y_test = np.load('models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=Tr
 model_file_path, model_name = names.get_homo_quantized_model_names(4, 4, 0)
 
 model = ModelsAndData.get_quickdraw()
-
-co = \
-    {
-        'quantized_float': quantized_float,
-        'quantized_float_softmax': quantized_float_softmax,
-        'quantized_float_sigmoid': quantized_float_sigmoid,
-        'quantized_float_tanh': quantized_float_tanh
-    }
 
 quantized_model = qkeras.utils.model_quantize(model, names.get_config_4_4(), 0, names.get_custom_objects(),
                                               False)
@@ -68,17 +59,17 @@ test_perf = quantized_model.evaluate(x=X_test, y=y_test, verbose=1, workers=12, 
 with open(model_name + '/' + model_name + '_train_val_loss_history.pkl', 'wb') as file_pi:
     pickle.dump(history.history, file_pi)
 
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-rc('text', usetex=True)
-plt.figure(figsize=(16, 9))
-plt.plot(history.history['loss'], linewidth=1)
-plt.plot(history.history['val_loss'], linewidth=1)
-plt.title('Model Loss over Epochs for model: ' + model_name)
-plt.ylabel('Loss')
-plt.xlabel('Epoch')
-plt.legend(['Training Sample Loss', 'Validation Sample Loss'])
-plt.savefig(model_name + '_train_val_loss_plot.pdf', dpi=500)
-plt.close()
+# rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+# rc('text', usetex=True)
+# plt.figure(figsize=(16, 9))
+# plt.plot(history.history['loss'], linewidth=1)
+# plt.plot(history.history['val_loss'], linewidth=1)
+# plt.title('Model Loss over Epochs for model: ' + model_name)
+# plt.ylabel('Loss')
+# plt.xlabel('Epoch')
+# plt.legend(['Training Sample Loss', 'Validation Sample Loss'])
+# plt.savefig(model_name + '_train_val_loss_plot.pdf', dpi=500)
+# plt.close()
 
 with open(model_name + '/' + model_name + '_test_performance.json',
           'w') as json_file:
