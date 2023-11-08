@@ -17,10 +17,10 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from models_and_data import ModelsAndData
 from quantized_float import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
 
-X_train = np.load('../models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True).astype(np.float32)
-y_train = np.load('../models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True).astype(np.float32)
-X_test = np.load('../models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
-y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
+X_train = np.load('models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True).astype(np.float32)
+y_train = np.load('models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True).astype(np.float32)
+X_test = np.load('models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
+y_test = np.load('models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
 
 # class EpochCallbacks(keras.callbacks.Callback):
 #     def __init__(self, epoch):
