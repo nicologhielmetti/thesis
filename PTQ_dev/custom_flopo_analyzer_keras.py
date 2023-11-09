@@ -32,17 +32,22 @@ class CustomFloPoAnalyzerKeras:
         self.analysis_data = {}
         self.weights_or_activations = 'activation_name' if string_id == 'activations' else 'weight_name' \
             if string_id == 'weights' else ''
-        ulp_file_path = file_name_id + '/PTQ_analysis/ulp' + '_' + string_id + '_' + ds_len + '_' \
-            if ds_len is not None else '' + file_name_id + '.pkl'
-        exp_file_path = file_name_id + '/PTQ_analysis/exp' + '_' + string_id + '_' + ds_len + '_' \
-            if ds_len is not None else '' + file_name_id + '.pkl'
-        if not os.path.isfile(ulp_file_path) or not os.path.isfile(exp_file_path):
+        self.ulp_file_path = file_name_id + '/ptq_analysis/profiling_data/ulp' + '_' + string_id + '_' + ds_len + '_' \
+            if ds_len is not None else file_name_id + '/ptq_analysis/profiling_data/ulp' + '_' + string_id + '_' + file_name_id + '.pkl'
+        self.exp_file_path = file_name_id + '/ptq_analysis/profiling_data/exp' + '_' + string_id + '_' + ds_len + '_' \
+            if ds_len is not None else file_name_id + '/ptq_analysis/profiling_data/exp' + '_' + string_id + '_' + file_name_id + '.pkl'
+        if not os.path.isfile(self.ulp_file_path) or not os.path.isfile(self.exp_file_path):
             united_data = get_data_func()
             data_gb = united_data.groupby(['layer_name', self.weights_or_activations])
             self.splitted_data = [data_gb.get_group(x) for x in data_gb.groups]
 
     def _analysis(self, data, compute_function, profile_timing, computation_id):
-        file_path = 'profiling_data_' + self.model.name + '/' + computation_id + '_' + self.string_id + '_' + self.file_name_id + '.pkl'
+        if computation_id == 'EXP':
+            file_path = self.exp_file_path
+        elif computation_id == 'ULP':
+            file_path = self.ulp_file_path
+        else:
+            raise Exception('Unrecognized computation')
         if self.file_name_id is not None and os.path.isfile(file_path):
             with open(file_path, 'rb') as f:
                 data.extend(pickle.load(f))
@@ -75,8 +80,8 @@ class CustomFloPoAnalyzerKeras:
 
         data.extend(list(_queue.queue))
         if self.file_name_id is not None:
-            if not os.path.exists('profiling_data_' + self.model.name + '/'):
-                os.makedirs('profiling_data_' + self.model.name + '/')
+            if not os.path.exists(self.file_name_id + '/ptq_analysis/profiling_data'):
+                os.makedirs(self.file_name_id + '/ptq_analysis/profiling_data')
             with open(file_path, 'wb') as f:
                 pickle.dump(data, f)
         return data
@@ -115,9 +120,9 @@ class CustomFloPoAnalyzerKeras:
         analysis_data = copy.deepcopy(self.analysis_data)
         for _, v in analysis_data['layer_data'].items():
             v.pop('plot_data')
-        if not os.path.exists('analysis_report'):
-            os.makedirs('analysis_report')
-        with open('analysis_report/' + self.string_id + '_' + self.file_name_id + '_PTQ_analysis.json', 'w') as fp:
+        if not os.path.exists(self.file_name_id + '/ptq_analysis/analysis_report/'):
+            os.makedirs(self.file_name_id + '/ptq_analysis/analysis_report/')
+        with open(self.file_name_id + '/ptq_analysis/analysis_report/' + self.string_id + '_' + self.file_name_id + '_ptq_analysis.json', 'w') as fp:
             json.dump(analysis_data, fp, sort_keys=True, indent=4)
         return analysis_data
 
@@ -188,7 +193,7 @@ class CustomFloPoAnalyzerKeras:
             single_res['statistical_values']['max_exp'] = max(df_e_filtered['EXP'])
             single_res['statistical_values']['min_exp_bit'] = compute_min_exp_bit(
                 single_res['statistical_values']['min_exp'], single_res['statistical_values']['max_exp'])
-            single_res['statistical_values']['exp_offset'] = compute_exp_offset(single_res['statistical_values']['min_exp_bit'],
+            single_res['statistical_values']['exponent_offset'] = compute_exp_offset(single_res['statistical_values']['min_exp_bit'],
                                                                     single_res['statistical_values']['min_exp'],
                                                                     single_res['statistical_values']['max_exp'])
             single_res['statistical_values']['min_ulp'].extend(np.percentile(u['ULP'], ulp_percentiles))
@@ -198,7 +203,7 @@ class CustomFloPoAnalyzerKeras:
             single_res['exact_values']['max_exp'] = max(df_e['EXP'])
             single_res['exact_values']['min_exp_bit'] = compute_min_exp_bit(single_res['exact_values']['min_exp'],
                                                                             single_res['exact_values']['max_exp'])
-            single_res['exact_values']['exp_offset'] = compute_exp_offset(single_res['exact_values']['min_exp_bit'],
+            single_res['exact_values']['exponent_offset'] = compute_exp_offset(single_res['exact_values']['min_exp_bit'],
                                                               single_res['exact_values']['min_exp'],
                                                               single_res['exact_values']['max_exp'])
             single_res['exact_values']['min_ulp'] = min(df_u['ULP'])
@@ -215,7 +220,7 @@ class CustomFloPoAnalyzerKeras:
         for k, d in self.analysis_data['layer_data'].items():
             if plot_ulp:
                 fig, ax = plt.subplots(figsize=(16, 9))
-                p = sns.barplot(d['plot_data']['ulps_count_filtered'], x='ULP', y='count', ax=ax, lw=0.)
+                p = sns.barplot(d['plot_data']['ulps_count_filtered'], x='ULP', y='count', ax=ax, lw=0., palette=sns.color_palette("tab10"), hue='ULP', legend=False)
                 every_x = (len(ax.get_xticks()) // 50) + 1
                 ax.set_xticks(ax.get_xticks()[::every_x])
                 p.tick_params(labelrotation=45)
@@ -228,9 +233,9 @@ class CustomFloPoAnalyzerKeras:
                     round(d['plot_data']['ulps_count_filtered']['count'].max() + d['plot_data']['ulps_count_filtered'][
                         'count'].max() * 0.1)
                 )
-                if not os.path.exists(self.model.name + '_plots/'):
-                    os.makedirs(self.model.name + '_plots/')
-                plt.savefig(self.model.name + '_plots/' + k + '_ulp.png', dpi=500)
+                if not os.path.exists(self.file_name_id + '/ptq_analysis/plots/'):
+                    os.makedirs(self.file_name_id + '/ptq_analysis/plots/')
+                plt.savefig(self.file_name_id + '/ptq_analysis/plots/' + k + '_ulp.png', dpi=500)
                 plt.close(fig)
             if plot_cumulative:
                 fig, ax = plt.subplots(figsize=(16, 9))
@@ -258,23 +263,23 @@ class CustomFloPoAnalyzerKeras:
 
                 # Add a legend to the plot
                 ax.legend()
-                if not os.path.exists(self.model.name + '_plots/'):
-                    os.makedirs(self.model.name + '_plots/')
-                plt.savefig(self.model.name + '_plots/' + k + '_ulp_cdf.png',
+                if not os.path.exists(self.file_name_id + '/ptq_analysis/plots/'):
+                    os.makedirs(self.file_name_id + '/ptq_analysis/plots/')
+                plt.savefig(self.file_name_id + '/ptq_analysis/plots/' + k + '_ulp_cdf.png',
                             dpi=500)
                 plt.close(fig)
 
     def _exp_plot(self):
         for k, d in self.analysis_data['layer_data'].items():
             fig, ax = plt.subplots(figsize=(16, 9))
-            p = sns.barplot(d['plot_data']['exps_count_filtered'], x='EXP', y='count', ax=ax, lw=0.)
+            p = sns.barplot(d['plot_data']['exps_count_filtered'], x='EXP', y='count', ax=ax, lw=0.,  palette=sns.color_palette("tab10"), hue='EXP', legend=False)
             p.tick_params(labelrotation=45)
             p.set_title('Distribution of Exponent values of ' + self.string_id + ' for layer ' + k)
             p.set_xlabel('Exponent value [pure number]')
             p.set_ylabel('Number of occurrences [pure number]')
-            if not os.path.exists(self.model.name + '_plots/'):
-                os.makedirs(self.model.name + '_plots/')
-            plt.savefig(self.model.name + '_plots/' + k + '_exp.png', dpi=500)
+            if not os.path.exists(self.file_name_id + '/ptq_analysis/plots/'):
+                os.makedirs(self.file_name_id + '/ptq_analysis/plots/')
+            plt.savefig(self.file_name_id + '/ptq_analysis/plots/' + k + '_exp.png', dpi=500)
             plt.close(fig)
 
     def make_plots(self, ulp=True, exp=True, cumulative=True, colors=None):

@@ -142,7 +142,13 @@ std::vector<float> compute(std::vector<float> &v)
     {
         std::vector<float> res;
         std::sort(v.begin(), v.end());
+        float if_emp = v[0];
         v.erase(std::unique(v.begin(), v.end() ), v.end());
+        if(v.size() == 1)
+        {
+            res.push_back(m_floats_distance<float>(if_emp,if_emp));
+            return res;
+        }
         std::vector<float>::iterator end = v.end() - 1;
         std::vector<float>::iterator it = v.begin();
         for (; it != end; ++it)

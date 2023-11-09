@@ -27,6 +27,11 @@ struct Quantizer<CPUDevice, T>
     {
         for (int64_t i = 0; i < size; ++i)
         {
+            if(in[i] == 0.0 || in[i] == -0.0)
+            {
+                out[i] = in[i];
+                continue;
+            }
             int input_exp = std::ilogb(in[i]);
             if (input_exp > mask->max_exp)
                 out[i] = mask->max_val;

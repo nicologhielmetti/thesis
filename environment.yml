@@ -12,3 +12,5 @@ dependencies:
     - tensorflow==2.7.0
     - git+https://github.com/nicologhielmetti/qkeras.git@thesis
     - pybind11
+    - protobuf==3.20.*
+    - latex

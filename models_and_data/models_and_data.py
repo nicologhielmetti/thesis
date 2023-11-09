@@ -66,7 +66,7 @@ class ModelsAndData:
 
         output_layer = Activation(activation='softmax', dtype='float32', name='softmax')(dense_3)
 
-        # Create the Keras model
+        # Create the Keras qmodel
         model = Model(inputs=input_layer, outputs=output_layer, name='quickdraw')
         return model
 
@@ -122,6 +122,6 @@ class ModelsAndData:
 
         output_layer = QActivation(activation=quantizer_dict['softmax']['activation_quantizer'], name='softmax')(dense_3)
 
-        # Create the Keras model
+        # Create the Keras qmodel
         model = Model(inputs=input_layer, outputs=output_layer, name='quickdraw_full_quantized')
         return model

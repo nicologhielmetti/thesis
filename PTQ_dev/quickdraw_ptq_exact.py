@@ -223,16 +223,16 @@ test_perf = quantized_model.evaluate(x=X_test, y=y_test, verbose=1, workers=28 *
 with open('../models_and_data/saved_quickdraw_weights/' + model_id + '_test_performance.json', 'w') as json_file:
     json.dump(test_perf, json_file)
 
-# def get_activations(model, X_test):
-#     inp = model.input
+# def get_activations(qmodel, X_test):
+#     inp = qmodel.input
 #     y_act = []
-#     for l in model.layers:
+#     for l in qmodel.layers:
 #         i_model = keras.models_and_data.Model(inputs=[inp], outputs=[l.output])
 #         y_act.append(i_model.predict(X_test))
 #     return y_act
 
 
 # qact = Common.get_activations_keras(qmodel, X_test[:1000])
-# act  = Common.get_activations_keras(model, X_test[:1000])
+# act  = Common.get_activations_keras(qmodel, X_test[:1000])
 # act = get_activations(keras_model, X_test[:1000])
 # qact = get_activations(quantized_model, X_test[:1000])

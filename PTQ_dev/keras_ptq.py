@@ -20,15 +20,15 @@ activations_file_name = model.name + '-' + str(ds_len)
 
 weights_file_name = model.name
 
-# activation_analyzer = CustomFloPoAnalyzerKeras(model, activations_file_name,
-#                                                partial(Common.get_activations_keras, model, X_test[:ds_len]),
+# activation_analyzer = CustomFloPoAnalyzerKeras(qmodel, activations_file_name,
+#                                                partial(Common.get_activations_keras, qmodel, X_test[:ds_len]),
 #                                                'activations')
 # 
 # data_activations = activation_analyzer.analyze(profile_timing=True)
 # activations_analysis = activation_analyzer.mantissa_exponent_analysis()
 # activation_analyzer.make_plots()
 # 
-# weight_analyzer = CustomFloPoAnalyzerKeras(model, weights_file_name, partial(Common.get_weights_keras, model),
+# weight_analyzer = CustomFloPoAnalyzerKeras(qmodel, weights_file_name, partial(Common.get_weights_keras, qmodel),
 #                                            'weights')
 # 
 # data_weights = weight_analyzer.analyze(profile_timing=True)
