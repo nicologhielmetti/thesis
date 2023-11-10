@@ -1,6 +1,7 @@
+from collections import defaultdict
+
 from hls4ml.model import profiling
 import numpy as np
-
 
 class Common:
     @staticmethod
@@ -10,3 +11,4 @@ class Common:
     @staticmethod
     def get_weights_keras(model):
         return profiling.weights_keras(model)
+

@@ -1,3 +1,4 @@
+import json
 import os
 
 from quantized_float import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
@@ -7,12 +8,18 @@ class SharedDefinitons:
     def __init__(self, base_name):
         self.base_name = base_name
 
-    def get_activation_and_weight_file_names(self):
-        pass
 
-    def get_activation_and_weight_analysis(self):
-        pass
+    def get_activation_and_weight_config(self):
+        a_path = self.base_name + '/ptq_analysis/analysis_report/activations_' + self.base_name + '_ptq_analysis.json'
+        w_path = self.base_name + '/ptq_analysis/analysis_report/weights_' + self.base_name + '_ptq_analysis.json'
 
+        with open(w_path, 'r') as f:
+            weight_analysis = json.load(f)
+
+        with open(a_path, 'r') as f:
+            activations_analysis = json.load(f)
+
+        return activations_analysis, weight_analysis
     def get_base_name(self):
         return self.base_name
 
@@ -86,14 +93,14 @@ class SharedDefinitons:
                 'quantized_float_tanh': quantized_float_tanh
             }
 
-    def get_config_from_act_and_weight_config(self, weight_config, activation_config, kind_of_analysis, percentile_idx):
+    def get_config_from_act_and_weight_config(self, activation_config, weight_config, kind_of_analysis, percentile_idx=None):
         if kind_of_analysis not in ['statistical_values', 'exact_values']:
             raise ValueError('kind_of_analysis has to be one of `statistical_values` or `exact_values`')
         act_dense_6_exp_offset = activation_config['layer_data']['dense_6_activation'][kind_of_analysis][
             'exponent_offset']
         act_lstm_1_exp_offset = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis][
             'exponent_offset']
-        state_lstm_1_exp_offset = activation_config['layer_data']['lstm_1_state_activation'][kind_of_analysis][
+        state_lstm_1_exp_offset = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis][
             'exponent_offset']
         act_softmax_exp_offset = activation_config['layer_data']['softmax_activation'][kind_of_analysis][
             'exponent_offset']
@@ -104,24 +111,26 @@ class SharedDefinitons:
 
         act_dense_6_exp = activation_config['layer_data']['dense_6_activation'][kind_of_analysis]['min_exp_bit']
         act_lstm_1_exp = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis]['min_exp_bit']
-        state_lstm_1_exp = activation_config['layer_data']['lstm_1_state_activation'][kind_of_analysis][
+        state_lstm_1_exp = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis][
             'min_exp_bit']
         act_softmax_exp = activation_config['layer_data']['softmax_activation'][kind_of_analysis]['min_exp_bit']
         act_dense_5_exp = activation_config['layer_data']['dense_5_activation'][kind_of_analysis]['min_exp_bit']
         act_dense_3_exp = activation_config['layer_data']['dense_3_activation'][kind_of_analysis]['min_exp_bit']
 
-        act_dense_6_man = activation_config['layer_data']['dense_6_activation'][kind_of_analysis]['min_man_bit'][
-            percentile_idx]
-        act_lstm_1_man = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis]['min_man_bit'][
-            percentile_idx]
-        state_lstm_1_man = \
-            activation_config['layer_data']['lstm_1_state_activation'][kind_of_analysis]['min_man_bit'][percentile_idx]
-        act_softmax_man = activation_config['layer_data']['softmax_activation'][kind_of_analysis]['min_man_bit'][
-            percentile_idx]
-        act_dense_5_man = activation_config['layer_data']['dense_5_activation'][kind_of_analysis]['min_man_bit'][
-            percentile_idx]
-        act_dense_3_man = activation_config['layer_data']['dense_3_activation'][kind_of_analysis]['min_man_bit'][
-            percentile_idx]
+        if percentile_idx is not None:
+            act_dense_6_man = activation_config['layer_data']['dense_6_activation'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            act_lstm_1_man = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            state_lstm_1_man = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            act_softmax_man = activation_config['layer_data']['softmax_activation'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            act_dense_5_man = activation_config['layer_data']['dense_5_activation'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            act_dense_3_man = activation_config['layer_data']['dense_3_activation'][kind_of_analysis]['min_man_bit'][percentile_idx]
+        else:
+            act_dense_6_man = activation_config['layer_data']['dense_6_activation'][kind_of_analysis]['min_man_bit']
+            act_lstm_1_man = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis]['min_man_bit']
+            state_lstm_1_man = activation_config['layer_data']['lstm_1_activation'][kind_of_analysis]['min_man_bit']
+            act_softmax_man = activation_config['layer_data']['softmax_activation'][kind_of_analysis]['min_man_bit']
+            act_dense_5_man = activation_config['layer_data']['dense_5_activation'][kind_of_analysis]['min_man_bit']
+            act_dense_3_man = activation_config['layer_data']['dense_3_activation'][kind_of_analysis]['min_man_bit']
 
         wei_dense_6_exp_offset = weight_config['layer_data']['dense_6_w'][kind_of_analysis]['exponent_offset']
         wei_lstm_1_exp_offset = weight_config['layer_data']['lstm_1_w'][kind_of_analysis]['exponent_offset']
@@ -135,11 +144,18 @@ class SharedDefinitons:
         wei_dense_5_exp = weight_config['layer_data']['dense_5_w'][kind_of_analysis]['min_exp_bit']
         wei_dense_3_exp = weight_config['layer_data']['dense_3_w'][kind_of_analysis]['min_exp_bit']
 
-        wei_dense_6_man = weight_config['layer_data']['dense_6_w'][kind_of_analysis]['min_man_bit'][percentile_idx]
-        wei_lstm_1_man = weight_config['layer_data']['lstm_1_w'][kind_of_analysis]['min_man_bit'][percentile_idx]
-        rw_lstm_1_man = weight_config['layer_data']['lstm_1_rw'][kind_of_analysis]['min_man_bit'][percentile_idx]
-        wei_dense_5_man = weight_config['layer_data']['dense_5_w'][kind_of_analysis]['min_man_bit'][percentile_idx]
-        wei_dense_3_man = weight_config['layer_data']['dense_3_w'][kind_of_analysis]['min_man_bit'][percentile_idx]
+        if percentile_idx is not None:
+            wei_dense_6_man = weight_config['layer_data']['dense_6_w'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            wei_lstm_1_man = weight_config['layer_data']['lstm_1_w'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            rw_lstm_1_man = weight_config['layer_data']['lstm_1_rw'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            wei_dense_5_man = weight_config['layer_data']['dense_5_w'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            wei_dense_3_man = weight_config['layer_data']['dense_3_w'][kind_of_analysis]['min_man_bit'][percentile_idx]
+        else:
+            wei_dense_6_man = weight_config['layer_data']['dense_6_w'][kind_of_analysis]['min_man_bit']
+            wei_lstm_1_man = weight_config['layer_data']['lstm_1_w'][kind_of_analysis]['min_man_bit']
+            rw_lstm_1_man = weight_config['layer_data']['lstm_1_rw'][kind_of_analysis]['min_man_bit']
+            wei_dense_5_man = weight_config['layer_data']['dense_5_w'][kind_of_analysis]['min_man_bit']
+            wei_dense_3_man = weight_config['layer_data']['dense_3_w'][kind_of_analysis]['min_man_bit']
 
         b_dense_6_exp_offset = weight_config['layer_data']['dense_6_b'][kind_of_analysis]['exponent_offset']
         b_lstm_1_exp_offset = weight_config['layer_data']['lstm_1_b'][kind_of_analysis]['exponent_offset']
@@ -151,10 +167,16 @@ class SharedDefinitons:
         b_dense_5_exp = weight_config['layer_data']['dense_5_b'][kind_of_analysis]['min_exp_bit']
         b_dense_3_exp = weight_config['layer_data']['dense_3_b'][kind_of_analysis]['min_exp_bit']
 
-        b_dense_6_man = weight_config['layer_data']['dense_6_b'][kind_of_analysis]['min_man_bit'][percentile_idx]
-        b_lstm_1_man = weight_config['layer_data']['lstm_1_b'][kind_of_analysis]['min_man_bit'][percentile_idx]
-        b_dense_5_man = weight_config['layer_data']['dense_5_b'][kind_of_analysis]['min_man_bit'][percentile_idx]
-        b_dense_3_man = weight_config['layer_data']['dense_3_b'][kind_of_analysis]['min_man_bit'][percentile_idx]
+        if percentile_idx is not None:
+            b_dense_6_man = weight_config['layer_data']['dense_6_b'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            b_lstm_1_man = weight_config['layer_data']['lstm_1_b'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            b_dense_5_man = weight_config['layer_data']['dense_5_b'][kind_of_analysis]['min_man_bit'][percentile_idx]
+            b_dense_3_man = weight_config['layer_data']['dense_3_b'][kind_of_analysis]['min_man_bit'][percentile_idx]
+        else:
+            b_dense_6_man = weight_config['layer_data']['dense_6_b'][kind_of_analysis]['min_man_bit']
+            b_lstm_1_man = weight_config['layer_data']['lstm_1_b'][kind_of_analysis]['min_man_bit']
+            b_dense_5_man = weight_config['layer_data']['dense_5_b'][kind_of_analysis]['min_man_bit']
+            b_dense_3_man = weight_config['layer_data']['dense_3_b'][kind_of_analysis]['min_man_bit']
 
         quantizers_config = \
             {

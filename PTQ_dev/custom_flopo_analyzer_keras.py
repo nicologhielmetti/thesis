@@ -115,14 +115,16 @@ class CustomFloPoAnalyzerKeras:
 
     def mantissa_exponent_analysis(self):
         if not self.analysis_data:
-            self._generate_df_mantissa_exponent_analysis(self.min_value_filter_ulp, self.min_value_filter_exp, 
+            self._generate_df_mantissa_exponent_analysis(self.min_value_filter_ulp, self.min_value_filter_exp,
                                                          self.ulp_percentiles)
         analysis_data = copy.deepcopy(self.analysis_data)
         for _, v in analysis_data['layer_data'].items():
             v.pop('plot_data')
         if not os.path.exists(self.file_name_id + '/ptq_analysis/analysis_report/'):
             os.makedirs(self.file_name_id + '/ptq_analysis/analysis_report/')
-        with open(self.file_name_id + '/ptq_analysis/analysis_report/' + self.string_id + '_' + self.file_name_id + '_ptq_analysis.json', 'w') as fp:
+        with open(
+                self.file_name_id + '/ptq_analysis/analysis_report/' + self.string_id + '_' + self.file_name_id + '_ptq_analysis.json',
+                'w') as fp:
             json.dump(analysis_data, fp, sort_keys=True, indent=4)
         return analysis_data
 
@@ -168,6 +170,16 @@ class CustomFloPoAnalyzerKeras:
                             'min_man_bit': 0
                         }
                 }
+            # ulp section
+            if len(u['ULP']) == 1 and u['ULP'][0] == 0.0:
+                if self.string_id == 'activations':
+                    print('No valid ULP for ' + u[
+                        'activation_name'] + '; do not consider the results. Probably all profiled values are 0s.')
+                else:
+                    print('No valid ULP for ' + u[
+                        'weight_name'] + '; do not consider the results. Probably all profiled values are 0s.')
+                u['ULP'][0] = 1.0
+
             df_u = (
                 pd.DataFrame(u).
                 value_counts(sort=False).
@@ -179,6 +191,11 @@ class CustomFloPoAnalyzerKeras:
             single_res['plot_data']['ulps_count'] = df_u
             single_res['plot_data']['ulps_count_filtered'] = df_u[df_u['count'] > df_u['count'].max() *
                                                                   min_value_filter_ulp]
+            single_res['exact_values']['min_ulp'] = min(df_u['ULP'])
+            single_res['exact_values']['min_man_bit'] = int(
+                23 - np.ceil(np.log2(single_res['exact_values']['min_ulp'])))
+
+            # exponent/offset section
             df_e = (
                 pd.DataFrame(e).
                 value_counts(sort=False).
@@ -186,6 +203,9 @@ class CustomFloPoAnalyzerKeras:
                 rename(columns={2: 'count'}).
                 drop(columns=['layer_name', self.weights_or_activations])
             )
+            single_res['statistical_values']['min_ulp'].extend(np.percentile(u['ULP'], ulp_percentiles))
+            single_res['statistical_values']['min_man_bit'].extend(
+                (np.array(23 - np.ceil(np.log2(single_res['statistical_values']['min_ulp'])), dtype='int')).tolist())
             df_e_filtered = df_e[df_e['count'] > df_e['count'].max() * min_value_filter_exp]
             single_res['plot_data']['exps_count'] = df_e
             single_res['plot_data']['exps_count_filtered'] = df_e_filtered
@@ -193,22 +213,19 @@ class CustomFloPoAnalyzerKeras:
             single_res['statistical_values']['max_exp'] = max(df_e_filtered['EXP'])
             single_res['statistical_values']['min_exp_bit'] = compute_min_exp_bit(
                 single_res['statistical_values']['min_exp'], single_res['statistical_values']['max_exp'])
-            single_res['statistical_values']['exponent_offset'] = compute_exp_offset(single_res['statistical_values']['min_exp_bit'],
-                                                                    single_res['statistical_values']['min_exp'],
-                                                                    single_res['statistical_values']['max_exp'])
-            single_res['statistical_values']['min_ulp'].extend(np.percentile(u['ULP'], ulp_percentiles))
-            single_res['statistical_values']['min_man_bit'].extend(
-                (np.array(23 - np.ceil(np.log2(single_res['statistical_values']['min_ulp'])), dtype='int')).tolist())
+            single_res['statistical_values']['exponent_offset'] = compute_exp_offset(
+                single_res['statistical_values']['min_exp_bit'],
+                single_res['statistical_values']['min_exp'],
+                single_res['statistical_values']['max_exp'])
+
             single_res['exact_values']['min_exp'] = min(df_e['EXP'])
             single_res['exact_values']['max_exp'] = max(df_e['EXP'])
             single_res['exact_values']['min_exp_bit'] = compute_min_exp_bit(single_res['exact_values']['min_exp'],
                                                                             single_res['exact_values']['max_exp'])
-            single_res['exact_values']['exponent_offset'] = compute_exp_offset(single_res['exact_values']['min_exp_bit'],
-                                                              single_res['exact_values']['min_exp'],
-                                                              single_res['exact_values']['max_exp'])
-            single_res['exact_values']['min_ulp'] = min(df_u['ULP'])
-            single_res['exact_values']['min_man_bit'] = int(
-                23 - np.ceil(np.log2(single_res['exact_values']['min_ulp'])))
+            single_res['exact_values']['exponent_offset'] = compute_exp_offset(
+                single_res['exact_values']['min_exp_bit'],
+                single_res['exact_values']['min_exp'],
+                single_res['exact_values']['max_exp'])
             if self.string_id == 'activations':
                 res['layer_data'].update({u['layer_name'] + '_' + u[self.weights_or_activations]: single_res})
             else:
@@ -220,7 +237,8 @@ class CustomFloPoAnalyzerKeras:
         for k, d in self.analysis_data['layer_data'].items():
             if plot_ulp:
                 fig, ax = plt.subplots(figsize=(16, 9))
-                p = sns.barplot(d['plot_data']['ulps_count_filtered'], x='ULP', y='count', ax=ax, lw=0., palette=sns.color_palette("tab10"), hue='ULP', legend=False)
+                p = sns.barplot(d['plot_data']['ulps_count_filtered'], x='ULP', y='count', ax=ax, lw=0.,
+                                palette=sns.color_palette("tab10"), hue='ULP', legend=False)
                 every_x = (len(ax.get_xticks()) // 50) + 1
                 ax.set_xticks(ax.get_xticks()[::every_x])
                 p.tick_params(labelrotation=45)
@@ -272,7 +290,8 @@ class CustomFloPoAnalyzerKeras:
     def _exp_plot(self):
         for k, d in self.analysis_data['layer_data'].items():
             fig, ax = plt.subplots(figsize=(16, 9))
-            p = sns.barplot(d['plot_data']['exps_count_filtered'], x='EXP', y='count', ax=ax, lw=0.,  palette=sns.color_palette("tab10"), hue='EXP', legend=False)
+            p = sns.barplot(d['plot_data']['exps_count_filtered'], x='EXP', y='count', ax=ax, lw=0.,
+                            palette=sns.color_palette("tab10"), hue='EXP', legend=False)
             p.tick_params(labelrotation=45)
             p.set_title('Distribution of Exponent values of ' + self.string_id + ' for layer ' + k)
             p.set_xlabel('Exponent value [pure number]')
@@ -286,7 +305,8 @@ class CustomFloPoAnalyzerKeras:
         if colors is None:
             colors = ['red', 'green', 'orange', 'purple', 'black']
         if not self.analysis_data:
-            self._generate_df_mantissa_exponent_analysis(self.min_value_filter_ulp, self.min_value_filter_exp, self.ulp_percentiles)
+            self._generate_df_mantissa_exponent_analysis(self.min_value_filter_ulp, self.min_value_filter_exp,
+                                                         self.ulp_percentiles)
 
         sns.set_style('whitegrid')
 

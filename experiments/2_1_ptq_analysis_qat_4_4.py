@@ -36,7 +36,7 @@ X_test = np.load('models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=Tr
 y_test = np.load('models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
 
 ds_len = 1000
-
+#
 # activation_analyzer = CustomFloPoAnalyzerKeras(qmodel, model_name,
 #                                                partial(Common.get_activations_keras, qmodel,
 #                                                        X_test[:ds_len]),
@@ -44,7 +44,7 @@ ds_len = 1000
 #                                                min_value_filter_ulp=0.10,
 #                                                min_value_filter_exp=0.10,
 #                                                ulp_percentiles=[40, 50, 60, 70, 80])
-
+#
 # data_activations = activation_analyzer.analyze(analyze_ulp=True, analyze_exp=True, profile_timing=True)
 # activations_analysis_fixed = activation_analyzer.mantissa_exponent_analysis()
 # activation_analyzer.make_plots()

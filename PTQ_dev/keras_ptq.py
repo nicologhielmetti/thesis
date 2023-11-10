@@ -11,7 +11,7 @@ from functools import partial
 from models_and_data import ModelsAndData
 
 model = keras.models.load_model('../../models_and_data/saved_quickdraw_model/Quickdraw5ClassLSTMFinL.h5')
-model._name = 'quickdraw_original'
+model.analysis_name = 'quickdraw_original'
 X_test = np.load('../data/quickdraw_dataset/X_test_format.npy')
 y_test = np.load('../data/quickdraw_dataset/y_test_format.npy')
 

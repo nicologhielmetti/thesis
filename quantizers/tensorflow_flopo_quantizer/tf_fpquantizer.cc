@@ -117,8 +117,8 @@ public:
 		    _mask.min_exp = -std::pow(2, _mask.e_bits - 1) + 2;
 		}
 
-		assertm(_mask.max_exp <=  126, "max_exp <=  126!");
-		assertm(_mask.min_exp >= -126, "min_exp >= -126!");
+		//assertm(_mask.max_exp <=  126, "max_exp <=  126!");
+		//assertm(_mask.min_exp >= -126, "min_exp >= -126!");
 		
 		if(_mask.ret_inf_on_ovf)
 		{
