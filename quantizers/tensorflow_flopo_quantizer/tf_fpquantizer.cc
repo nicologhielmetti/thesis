@@ -27,16 +27,26 @@ struct Quantizer<CPUDevice, T>
     {
         for (int64_t i = 0; i < size; ++i)
         {
+            int input_exp;
             if(in[i] == 0.0 || in[i] == -0.0)
             {
                 out[i] = in[i];
                 continue;
             }
-            int input_exp = std::ilogb(in[i]);
+            if(in[i] == 0.0)
+            {
+                input_exp = 0;
+            }
+            else if (std::isinf(in[i]) || std::isnan(in[i]))
+            {
+                input_exp = 128;
+            }
+            else
+                input_exp = std::ilogb(in[i]);
             if (input_exp > mask->max_exp)
-                out[i] = mask->max_val;
+                out[i] = std::copysign(mask->max_val, in[i]);
             else if (input_exp < mask->min_exp)
-                out[i] = mask->min_val;
+                out[i] = std::copysign(mask->min_val, in[i]);
             else
             {
                 uint32_t qm = *((uint32_t *)&in[i]) & mask->qm_mask;
@@ -74,8 +84,8 @@ public:
 					   context->GetAttr("exp_offset", &_mask.exp_offset));
 		
 		// Check that exp_offset is in the fp32 exp range
-		OP_REQUIRES(context, _mask.exp_offset >= -126 && _mask.exp_offset < 126,
-					errors::InvalidArgument("Need exp_offset >= -126 and < 126, got ",
+		OP_REQUIRES(context, _mask.exp_offset >= -127 && _mask.exp_offset < 127,
+					errors::InvalidArgument("Need exp_offset >= -127 and < 127, got ",
 											_mask.exp_offset));
 		OP_REQUIRES_OK(context,
 					   context->GetAttr("use_exp_offset", &_mask.use_exp_offset));
@@ -108,8 +118,8 @@ public:
 		// min exclude subnormals
 		if(_mask.use_exp_offset)
 		{
-		    _mask.max_exp =  std::pow(2, _mask.e_bits - 1) - 1 + _mask.exp_offset;
-		    _mask.min_exp = -std::pow(2, _mask.e_bits - 1) + 2 + _mask.exp_offset;
+		    _mask.max_exp =  std::pow(2, _mask.e_bits) - 1 + _mask.exp_offset;
+		    _mask.min_exp = _mask.exp_offset;
 		}
 		else
 		{
@@ -131,9 +141,9 @@ public:
 		    uint32_t biased_min_exp = _mask.min_exp + e_bias;
 		    float frac = 0;
 		    for(int i = 0; i < _mask.m_bits; ++i)
-		        frac += std::pow(2, -(i+1));;
-		    _mask.max_val = +1 * std::pow(2, _mask.max_exp) * (1.0 + frac);
-		    _mask.min_val = -1 * std::pow(2, _mask.min_exp) * (1.0 + frac);
+		        frac += std::pow(2, -(i+1));
+		    _mask.max_val = std::pow(2, _mask.max_exp) * (1.0 + frac);
+		    _mask.min_val = std::pow(2, _mask.min_exp) * (1.0 + frac);
 		}
 
         //std::cout << "Constructor FP quantizer" << std::endl;

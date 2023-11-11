@@ -3,9 +3,9 @@ import numpy as np
 
 from quantized_float import quantized_float_tanh
 
-x = np.random.normal(0, 1000, 1_000_000).astype(np.float32)
+x = np.load('test.npy')
 
-q = quantized_float_tanh(8, 23, ret_inf_on_ovf=0)
+q = quantized_float_tanh(4, 23, exp_offset=-14, use_exp_offset=1, ret_inf_on_ovf=0)
 
 
 yq = q(x)

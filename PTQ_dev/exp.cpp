@@ -2,24 +2,36 @@
 #include <iostream>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <cmath>
   
 namespace py = pybind11;
 
-std::vector<int8_t> compute(std::vector<float> &v) 
+//#define FP_ILOGB0 0
+
+std::vector<int> compute(std::vector<float> &v) 
 {
     if (!v.empty())
     {
-        std::vector<int8_t> res;
-        std::sort(v.begin(), v.end());
-        v.erase(std::unique(v.begin(), v.end() ), v.end());
+        std::vector<int> res;
+        //std::sort(v.begin(), v.end());
+        //v.erase(std::unique(v.begin(), v.end() ), v.end());
         for (auto f : v)
-            res.push_back(((int8_t) ((*((unsigned*)(&f))) >> 23)) - 127);
+            if(f == 0.0)
+            {
+                res.push_back(0);
+            }
+            else if (std::isinf(f) || std::isnan(f))
+            {
+                res.push_back(128);
+            }
+            else
+                res.push_back(std::ilogb(f));
         return res;
     }
     else
     {
         std::cout << "EMPTY" << std::endl;
-        return std::vector<int8_t>();
+        return std::vector<int>();
     }
 }
 

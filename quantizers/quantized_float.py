@@ -99,13 +99,13 @@ class quantized_float_tanh(BaseQuantizer):
         x = K.cast_to_floatx(x)
 
         # not quantized for STE
-        y = K.tanh(x)
+        y = tf.tanh(x)
         # quantized input and output
-        xq = tf_fpquantizer.quantize(x, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
-                                     exp_offset=self.exp_offset,
-                                     use_exp_offset=self.use_exp_offset, ret_inf_on_ovf=self.ret_inf_on_ovf,
-                                     debug=self.debug)
-        yx = K.tanh(xq)
+        # xq = tf_fpquantizer.quantize(x, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
+        #                              exp_offset=self.exp_offset,
+        #                              use_exp_offset=self.use_exp_offset, ret_inf_on_ovf=self.ret_inf_on_ovf,
+        #                              debug=self.debug)
+        yx = tf.tanh(x)
 
         yq = tf_fpquantizer.quantize(yx, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
                                      exp_offset=self.exp_offset,
@@ -157,12 +157,12 @@ class quantized_float_sigmoid(BaseQuantizer):
 
     def __call__(self, x):
         x = K.cast_to_floatx(x)
-        y = K.sigmoid(x)
-        xq = tf_fpquantizer.quantize(x, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
-                                     exp_offset=self.exp_offset,
-                                     use_exp_offset=self.use_exp_offset, ret_inf_on_ovf=self.ret_inf_on_ovf,
-                                     debug=self.debug)
-        yx = K.sigmoid(xq)
+        y = tf.sigmoid(x)
+        # xq = tf_fpquantizer.quantize(x, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
+        #                              exp_offset=self.exp_offset,
+        #                              use_exp_offset=self.use_exp_offset, ret_inf_on_ovf=self.ret_inf_on_ovf,
+        #                              debug=self.debug)
+        yx = tf.sigmoid(x)
         yq = tf_fpquantizer.quantize(yx, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
                                      exp_offset=self.exp_offset,
                                      use_exp_offset=self.use_exp_offset, ret_inf_on_ovf=self.ret_inf_on_ovf,
@@ -213,11 +213,11 @@ class quantized_float_softmax(BaseQuantizer):
     def __call__(self, x):
         x = K.cast_to_floatx(x)
         y = K.softmax(x)
-        xq = tf_fpquantizer.quantize(x, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
-                                     exp_offset=self.exp_offset,
-                                     use_exp_offset=self.use_exp_offset, ret_inf_on_ovf=self.ret_inf_on_ovf,
-                                     debug=self.debug)
-        yx = K.softmax(xq)
+        # xq = tf_fpquantizer.quantize(x, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
+        #                              exp_offset=self.exp_offset,
+        #                              use_exp_offset=self.use_exp_offset, ret_inf_on_ovf=self.ret_inf_on_ovf,
+        #                              debug=self.debug)
+        yx = K.softmax(x)
         yq = tf_fpquantizer.quantize(yx, m_bits=self.mantissa_bits, e_bits=self.exponent_bits,
                                      exp_offset=self.exp_offset,
                                      use_exp_offset=self.use_exp_offset, ret_inf_on_ovf=self.ret_inf_on_ovf,

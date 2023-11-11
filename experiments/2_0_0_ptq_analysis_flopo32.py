@@ -3,7 +3,9 @@ from functools import partial
 
 import numpy as np
 from tensorflow import keras
+import qkeras.utils 
 
+from models_and_data import ModelsAndData
 from shared_definitions import SharedDefinitons
 from common import Common
 from custom_flopo_analyzer_keras import CustomFloPoAnalyzerKeras
@@ -20,7 +22,7 @@ except:
 X_test = np.load('models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
 y_test = np.load('models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
 
-ds_len = 1000
+ds_len = 100
 
 activation_analyzer = CustomFloPoAnalyzerKeras(model, model_name,
                                                      partial(Common.get_activations_keras, model,
@@ -32,7 +34,7 @@ activation_analyzer = CustomFloPoAnalyzerKeras(model, model_name,
 
 data_activations_fixed = activation_analyzer.analyze(analyze_ulp=True, analyze_exp=True, profile_timing=True)
 activations_analysis = activation_analyzer.mantissa_exponent_analysis()
-activation_analyzer.make_plots()
+# activation_analyzer.make_plots()
 
 weight_analyzer = CustomFloPoAnalyzerKeras(model, model_name,
                                            partial(Common.get_weights_keras, model),
@@ -43,12 +45,4 @@ weight_analyzer = CustomFloPoAnalyzerKeras(model, model_name,
 
 data_weights_fixed = weight_analyzer.analyze(analyze_ulp=True, analyze_exp=True, profile_timing=True)
 weight_analysis_fixed = weight_analyzer.mantissa_exponent_analysis()
-weight_analyzer.make_plots()
-
-model_file_path, model_name = names.get_hetero_quantized_model_names('exact_after_flopo32')
-act_config, wei_config = names.get_activation_and_weight_config()
-config = names.get_config_from_act_and_weight_config(act_config, wei_config, 'exact_values')
-
-model = ModelsAndData.get_quickdraw()
-
-qmodel = qkeras.utils.model_quantize(model, config, 0, names.get_custom_objects(), True)
+# weight_analyzer.make_plots()

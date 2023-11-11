@@ -201,6 +201,15 @@ class SharedDefinitons:
                         'state_quantizer': quantized_float(state_lstm_1_exp, state_lstm_1_man, state_lstm_1_exp_offset,
                                                            use_exp_offset=1)
                     },
+                # 'lstm_1':
+                #     {
+                #         'activation_quantizer': quantized_float_tanh(8, 23),
+                #         'recurrent_activation_quantizer': quantized_float_sigmoid(8, 23),
+                #         'kernel_quantizer': quantized_float(8, 23),
+                #         'recurrent_quantizer': quantized_float(8, 23),
+                #         'bias_quantizer': quantized_float(8, 23),
+                #         'state_quantizer': quantized_float(8, 23)
+                #     },
                 'dense_3':
                     {
                         'activation_quantizer': quantized_float(act_dense_3_exp, act_dense_3_man,

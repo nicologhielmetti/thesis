@@ -1,4 +1,19 @@
-import tensorflow as tf
-fpquantizer = tf.load_op_library('../../quantizers/tensorflow_flopo_quantizer/tf_fpquantizer.so.no_zero')
-for i in range(0, 100):
-    print(fpquantizer.quantize([[1.0+i, 2.0], [3.0, 4.0]], m_bits=8, e_bits=8, exp_offset=0, use_exp_offset=0, ret_inf_on_ovf=0, debug=0).numpy())
+import keras.activations
+import numpy as np
+import tensorflow
+from qkeras import QActivation
+from tensorflow.python.framework.ops import disable_eager_execution
+
+from quantized_float import quantized_float
+
+# x = np.random.normal(2**2, 5, 1_000_000).astype(np.float32)
+x = np.load('test.npy')
+q = quantized_float(4, 23, exp_offset=-14, use_exp_offset=1, ret_inf_on_ovf=0)
+
+xq = q(x)
+
+err = abs(x - xq.numpy())
+
+max_err = max(err)
+
+amax_err = np.argmax(abs(x - xq.numpy()))

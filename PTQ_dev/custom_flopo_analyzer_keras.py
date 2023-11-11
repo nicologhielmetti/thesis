@@ -41,6 +41,30 @@ class CustomFloPoAnalyzerKeras:
             data_gb = united_data.groupby(['layer_name', self.weights_or_activations])
             self.splitted_data = [data_gb.get_group(x) for x in data_gb.groups]
 
+    # def _analysis_sequential(self, data, compute_function, profile_timing, computation_id):
+    #     if computation_id == 'EXP':
+    #         file_path = self.exp_file_path
+    #     elif computation_id == 'ULP':
+    #         file_path = self.ulp_file_path
+    #     else:
+    #         raise Exception('Unrecognized computation')
+    #     if self.file_name_id is not None and os.path.isfile(file_path):
+    #         with open(file_path, 'rb') as f:
+    #             data.extend(pickle.load(f))
+    #             return data
+    # 
+    #     if profile_timing:
+    #         print(computation_id + ' started')
+    #         ts = time.time()
+    #     
+    #     for layer_data in self.splitted_data:
+    #         r = {
+    #             computation_id: [],
+    #             'layer_name': layer_data['layer_name'].unique()[0],
+    #             self.weights_or_activations: layer_data[self.weights_or_activations].unique()[0]
+    #         }
+    #         r[computation_id].append(compute_function(layer_data['values'].tolist()))
+            
     def _analysis(self, data, compute_function, profile_timing, computation_id):
         if computation_id == 'EXP':
             file_path = self.exp_file_path
@@ -90,13 +114,13 @@ class CustomFloPoAnalyzerKeras:
 
         ulp_analysis = partial(self._analysis,
                                data=self.ulp_data,
-                               compute_function=ulp.compute_nogil,
+                               compute_function=ulp.compute,
                                profile_timing=profile_timing,
                                computation_id='ULP')
 
         exp_analysis = partial(self._analysis,
                                data=self.exp_data,
-                               compute_function=exp.compute_nogil,
+                               compute_function=exp.compute,
                                profile_timing=profile_timing,
                                computation_id='EXP')
 
@@ -134,7 +158,7 @@ class CustomFloPoAnalyzerKeras:
 
         def compute_exp_offset(n, min_exp, max_exp):
             # n: min_exp_bits
-            return int(round(((max_exp - 1) + (min_exp + 2 - (2 ** n))) / 2))
+            return int(round((max_exp + min_exp - (2 ** n) + 1) / 2))
 
         res = \
             {
@@ -194,6 +218,9 @@ class CustomFloPoAnalyzerKeras:
             single_res['exact_values']['min_ulp'] = min(df_u['ULP'])
             single_res['exact_values']['min_man_bit'] = int(
                 23 - np.ceil(np.log2(single_res['exact_values']['min_ulp'])))
+            single_res['statistical_values']['min_ulp'].extend(np.percentile(u['ULP'], ulp_percentiles))
+            single_res['statistical_values']['min_man_bit'].extend(
+                (np.array(23 - np.ceil(np.log2(single_res['statistical_values']['min_ulp'])), dtype='int')).tolist())
 
             # exponent/offset section
             df_e = (
@@ -203,9 +230,7 @@ class CustomFloPoAnalyzerKeras:
                 rename(columns={2: 'count'}).
                 drop(columns=['layer_name', self.weights_or_activations])
             )
-            single_res['statistical_values']['min_ulp'].extend(np.percentile(u['ULP'], ulp_percentiles))
-            single_res['statistical_values']['min_man_bit'].extend(
-                (np.array(23 - np.ceil(np.log2(single_res['statistical_values']['min_ulp'])), dtype='int')).tolist())
+            
             df_e_filtered = df_e[df_e['count'] > df_e['count'].max() * min_value_filter_exp]
             single_res['plot_data']['exps_count'] = df_e
             single_res['plot_data']['exps_count_filtered'] = df_e_filtered

@@ -27,10 +27,10 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from models_and_data import ModelsAndData
 from quantized_float import quantized_float, quantized_float_tanh, quantized_float_sigmoid, quantized_float_softmax
 
-X_train = np.load('../models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True).astype(np.float32)
-y_train = np.load('../models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True).astype(np.float32)
-X_test = np.load('../models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
-y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
+X_train = np.load('models_and_data/quickdraw_dataset/X_train.npy', allow_pickle=True).astype(np.float32)
+y_train = np.load('models_and_data/quickdraw_dataset/y_train.npy', allow_pickle=True).astype(np.float32)
+X_test = np.load('models_and_data/quickdraw_dataset/X_test.npy', allow_pickle=True).astype(np.float32)
+y_test = np.load('models_and_data/quickdraw_dataset/y_test.npy', allow_pickle=True).astype(np.float32)
 
 # keras_model = keras.models_and_data.load_model('../models_and_data/saved_quickdraw_model/quickdraw_not_quantized.h5')
 # ds_len = 2000
@@ -60,8 +60,8 @@ y_test = np.load('../models_and_data/quickdraw_dataset/y_test.npy', allow_pickle
 # del weight_analyzer
 # 
 
-w_path = '../QAT_dev/analysis_report/weights_quickdraw_PTQ_analysis.json'
-a_path = '../QAT_dev/analysis_report/activations_quickdraw_2000_PTQ_analysis.json'
+a_path = 'quickdraw_flopo32/ptq_analysis/analysis_report/activations_quickdraw_flopo32_ptq_analysis.json'
+w_path = 'quickdraw_flopo32/ptq_analysis/analysis_report/weights_quickdraw_flopo32_ptq_analysis.json'
 
 with open(w_path, 'r') as f:
     weight_analysis = json.load(f)
@@ -69,32 +69,32 @@ with open(w_path, 'r') as f:
 with open(a_path, 'r') as f:
     activations_analysis = json.load(f)
 
-act_dense_6_exp_offset = activations_analysis['layer_data']['dense_6_activation']['exact_values']['bias']
-act_lstm_1_exp_offset = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['bias']
-state_lstm_1_exp_offset = activations_analysis['layer_data']['lstm_1_state_activation']['exact_values']['bias']
-act_softmax_exp_offset = activations_analysis['layer_data']['softmax_activation']['exact_values']['bias']
-act_dense_5_exp_offset = activations_analysis['layer_data']['dense_5_activation']['exact_values']['bias']
-act_dense_3_exp_offset = activations_analysis['layer_data']['dense_3_activation']['exact_values']['bias']
+act_dense_6_exp_offset = activations_analysis['layer_data']['dense_6_activation']['exact_values']['exponent_offset']
+act_lstm_1_exp_offset = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['exponent_offset']
+state_lstm_1_exp_offset = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['exponent_offset']
+act_softmax_exp_offset = activations_analysis['layer_data']['softmax_activation']['exact_values']['exponent_offset']
+act_dense_5_exp_offset = activations_analysis['layer_data']['dense_5_activation']['exact_values']['exponent_offset']
+act_dense_3_exp_offset = activations_analysis['layer_data']['dense_3_activation']['exact_values']['exponent_offset']
 
 act_dense_6_exp = activations_analysis['layer_data']['dense_6_activation']['exact_values']['min_exp_bit']
 act_lstm_1_exp = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['min_exp_bit']
-state_lstm_1_exp = activations_analysis['layer_data']['lstm_1_state_activation']['exact_values']['min_exp_bit']
+state_lstm_1_exp = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['min_exp_bit']
 act_softmax_exp = activations_analysis['layer_data']['softmax_activation']['exact_values']['min_exp_bit']
 act_dense_5_exp = activations_analysis['layer_data']['dense_5_activation']['exact_values']['min_exp_bit']
 act_dense_3_exp = activations_analysis['layer_data']['dense_3_activation']['exact_values']['min_exp_bit']
 
 act_dense_6_man = activations_analysis['layer_data']['dense_6_activation']['exact_values']['min_man_bit']
 act_lstm_1_man = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['min_man_bit']
-state_lstm_1_man = activations_analysis['layer_data']['lstm_1_state_activation']['exact_values']['min_man_bit']
+state_lstm_1_man = activations_analysis['layer_data']['lstm_1_activation']['exact_values']['min_man_bit']
 act_softmax_man = activations_analysis['layer_data']['softmax_activation']['exact_values']['min_man_bit']
 act_dense_5_man = activations_analysis['layer_data']['dense_5_activation']['exact_values']['min_man_bit']
 act_dense_3_man = activations_analysis['layer_data']['dense_3_activation']['exact_values']['min_man_bit']
 
-wei_dense_6_exp_offset = weight_analysis['layer_data']['dense_6_w']['exact_values']['bias']
-wei_lstm_1_exp_offset = weight_analysis['layer_data']['lstm_1_w']['exact_values']['bias']
-rw_lstm_1_exp_offset = weight_analysis['layer_data']['lstm_1_rw']['exact_values']['bias']
-wei_dense_5_exp_offset = weight_analysis['layer_data']['dense_5_w']['exact_values']['bias']
-wei_dense_3_exp_offset = weight_analysis['layer_data']['dense_3_w']['exact_values']['bias']
+wei_dense_6_exp_offset = weight_analysis['layer_data']['dense_6_w']['exact_values']['exponent_offset']
+wei_lstm_1_exp_offset = weight_analysis['layer_data']['lstm_1_w']['exact_values']['exponent_offset']
+rw_lstm_1_exp_offset = weight_analysis['layer_data']['lstm_1_rw']['exact_values']['exponent_offset']
+wei_dense_5_exp_offset = weight_analysis['layer_data']['dense_5_w']['exact_values']['exponent_offset']
+wei_dense_3_exp_offset = weight_analysis['layer_data']['dense_3_w']['exact_values']['exponent_offset']
 
 wei_dense_6_exp = weight_analysis['layer_data']['dense_6_w']['exact_values']['min_exp_bit']
 wei_lstm_1_exp = weight_analysis['layer_data']['lstm_1_w']['exact_values']['min_exp_bit']
@@ -108,10 +108,10 @@ rw_lstm_1_man = weight_analysis['layer_data']['lstm_1_rw']['exact_values']['min_
 wei_dense_5_man = weight_analysis['layer_data']['dense_5_w']['exact_values']['min_man_bit']
 wei_dense_3_man = weight_analysis['layer_data']['dense_3_w']['exact_values']['min_man_bit']
 
-b_dense_6_exp_offset = weight_analysis['layer_data']['dense_6_b']['exact_values']['bias']
-b_lstm_1_exp_offset = weight_analysis['layer_data']['lstm_1_b']['exact_values']['bias']
-b_dense_5_exp_offset = weight_analysis['layer_data']['dense_5_b']['exact_values']['bias']
-b_dense_3_exp_offset = weight_analysis['layer_data']['dense_3_b']['exact_values']['bias']
+b_dense_6_exp_offset = weight_analysis['layer_data']['dense_6_b']['exact_values']['exponent_offset']
+b_lstm_1_exp_offset = weight_analysis['layer_data']['lstm_1_b']['exact_values']['exponent_offset']
+b_dense_5_exp_offset = weight_analysis['layer_data']['dense_5_b']['exact_values']['exponent_offset']
+b_dense_3_exp_offset = weight_analysis['layer_data']['dense_3_b']['exact_values']['exponent_offset']
 
 b_dense_6_exp = weight_analysis['layer_data']['dense_6_b']['exact_values']['min_exp_bit']
 b_lstm_1_exp = weight_analysis['layer_data']['lstm_1_b']['exact_values']['min_exp_bit']
@@ -129,20 +129,29 @@ quantizer_dict = \
             {
                 'activation_quantizer': quantized_float(8, 23)
             },
+        # 'lstm_1':
+        #     {
+        #         'activation_quantizer': quantized_float_tanh(act_lstm_1_exp, act_lstm_1_man, act_lstm_1_exp_offset,
+        #                                                      use_exp_offset=1),
+        #         'recurrent_activation_quantizer': quantized_float_sigmoid(state_lstm_1_exp, state_lstm_1_man,
+        #                                                                   state_lstm_1_exp_offset,
+        #                                                                   use_exp_offset=1),
+        #         'kernel_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_exp_offset,
+        #                                             use_exp_offset=1),
+        #         'recurrent_quantizer': quantized_float(rw_lstm_1_exp, rw_lstm_1_man, rw_lstm_1_exp_offset,
+        #                                                use_exp_offset=1),
+        #         'bias_quantizer': quantized_float(b_lstm_1_exp, b_lstm_1_man, b_lstm_1_exp_offset, use_exp_offset=1),
+        #         'state_quantizer': quantized_float(state_lstm_1_exp, state_lstm_1_man, state_lstm_1_exp_offset,
+        #                                            use_exp_offset=1)
+        #     },
         'lstm_1':
             {
-                'activation_quantizer': quantized_float_tanh(act_lstm_1_exp, act_lstm_1_man, act_lstm_1_exp_offset,
-                                                             use_exp_offset=1),
-                'recurrent_activation_quantizer': quantized_float_sigmoid(state_lstm_1_exp, state_lstm_1_man,
-                                                                          state_lstm_1_exp_offset,
-                                                                          use_exp_offset=1),
-                'kernel_quantizer': quantized_float(wei_lstm_1_exp, wei_lstm_1_man, wei_lstm_1_exp_offset,
-                                                    use_exp_offset=1),
-                'recurrent_quantizer': quantized_float(rw_lstm_1_exp, rw_lstm_1_man, rw_lstm_1_exp_offset,
-                                                       use_exp_offset=1),
-                'bias_quantizer': quantized_float(b_lstm_1_exp, b_lstm_1_man, b_lstm_1_exp_offset, use_exp_offset=1),
-                'state_quantizer': quantized_float(state_lstm_1_exp, state_lstm_1_man, state_lstm_1_exp_offset,
-                                                   use_exp_offset=1)
+                'activation_quantizer': quantized_float_tanh(8, 23),
+                'recurrent_activation_quantizer': quantized_float_sigmoid(8, 23),
+                'kernel_quantizer': quantized_float(8, 23),
+                'recurrent_quantizer': quantized_float(8, 23),
+                'bias_quantizer': quantized_float(8, 23),
+                'state_quantizer': quantized_float(8, 23)
             },
         'dense_3':
             {
@@ -180,7 +189,7 @@ model_id = 'quickdraw_full_quantized_custom_exact'
 with open(model_id + '_quantizer_dict.json', 'w') as json_file:
     json.dump(quantizer_dict, json_file, indent=4)
 
-keras_model = keras.models.load_model('../models_and_data/saved_quickdraw_model/Quickdraw5ClassLSTMFinL.h5')
+keras_model = keras.models.load_model('quickdraw_flopo32/quickdraw_flopo32.h5')
 co = \
     {
         'quantized_float': quantized_float,
@@ -206,33 +215,33 @@ quantized_model = qkeras.utils.model_quantize(keras_model, quantizer_dict, 0, co
 # zwq = quickdraw_quantized.get_weights()
 # s = [abs(a - b) for a, b in zip(zw, zwq)]
 # quickdraw_quantized.load_weights('../models_and_data/saved_quickdraw_model/quickdraw_not_quantized.h5')
+# 
+# time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+# 
+# tb = TensorBoard(
+#     log_dir='tensorboard_logs/' + model_id + '_' + time_str,
+#     histogram_freq=1,
+#     write_graph=False,
+#     write_images=False,
+#     update_freq=1,
+#     profile_batch=0
+# )
+# quantized_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+# test_perf = quantized_model.evaluate(x=X_test, y=y_test, verbose=1, workers=28 * 2, use_multiprocessing=True,
+#                                      return_dict=True, callbacks=[tb])
+# with open('../models_and_data/saved_quickdraw_weights/' + model_id + '_test_performance.json', 'w') as json_file:
+#     json.dump(test_perf, json_file)
 
-time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-tb = TensorBoard(
-    log_dir='tensorboard_logs/' + model_id + '_' + time_str,
-    histogram_freq=1,
-    write_graph=False,
-    write_images=False,
-    update_freq=1,
-    profile_batch=0
-)
-quantized_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-test_perf = quantized_model.evaluate(x=X_test, y=y_test, verbose=1, workers=28 * 2, use_multiprocessing=True,
-                                     return_dict=True, callbacks=[tb])
-with open('../models_and_data/saved_quickdraw_weights/' + model_id + '_test_performance.json', 'w') as json_file:
-    json.dump(test_perf, json_file)
-
-# def get_activations(qmodel, X_test):
-#     inp = qmodel.input
-#     y_act = []
-#     for l in qmodel.layers:
-#         i_model = keras.models_and_data.Model(inputs=[inp], outputs=[l.output])
-#         y_act.append(i_model.predict(X_test))
-#     return y_act
+def get_activations(qmodel, X_test):
+    inp = qmodel.input
+    y_act = []
+    for l in qmodel.layers:
+        i_model = keras.models.Model(inputs=[inp], outputs=[l.output])
+        y_act.append(i_model.predict(X_test))
+    return y_act
 
 
 # qact = Common.get_activations_keras(qmodel, X_test[:1000])
 # act  = Common.get_activations_keras(qmodel, X_test[:1000])
-# act = get_activations(keras_model, X_test[:1000])
-# qact = get_activations(quantized_model, X_test[:1000])
+act = get_activations(keras_model, X_test[:1000])
+actq = get_activations(quantized_model, X_test[:1000])
