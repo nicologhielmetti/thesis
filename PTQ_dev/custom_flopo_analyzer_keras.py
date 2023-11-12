@@ -158,7 +158,12 @@ class CustomFloPoAnalyzerKeras:
 
         def compute_exp_offset(n, min_exp, max_exp):
             # n: min_exp_bits
-            return int(round((max_exp + min_exp - (2 ** n) + 1) / 2))
+            exp_offset = int(round((max_exp + min_exp + 1 - (2 ** n)) / 2))
+            if exp_offset < -126:
+                print('Exponent offset clipped to -126. Original computed offset: ' + str(exp_offset))
+            if exp_offset > 126:
+                print('Exponent offset clipped to 126. Original computed offset: ' + str(exp_offset))
+            return np.clip(exp_offset, a_min=-126, a_max=126)
 
         res = \
             {
